@@ -1,0 +1,10 @@
+mex -largeArrayDims dcmf_all_mex.cpp
+mex -largeArrayDims dcmf_init_all_mex.cpp
+%mex -largeArrayDims -g DCDmex.c
+DCMFinit_fast(train, zeros(size(train,1),0), feature, 8, 'maxItr',5,'eta',[0.01 500000], 'debug', 1, 'test', test);
+
+
+train_like = train > 3;
+N = size(train_like,2);
+
+y = randsample(1:N,  nnz(train_like), true, sum(train_like));
