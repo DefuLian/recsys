@@ -1,15 +1,7 @@
 function [metric, topkmat] = evaluate_item(train, test, P, Q, topk, cutoff)
 
 % user_count column vector storing how many entries in the test
-
-if nargin ==5
-    cutoff = 100;
-end
-    
-if topk>0 && topk < cutoff
-    topk = cutoff;
-end
-
+topkmat = [];    
 if nnz(test)>0
     [mat_rank, user_count, cand_count] = Predict(test, train, P, Q, topk);
     %ind = user_count > 0.0001;
@@ -105,25 +97,30 @@ function [ mat, user_count, cand_count ] = Predict_Tuple(R, E, U, V )
 %   R: test data with three columns, user column, item column and relevance
 %   column; E: training rating matrix
 %   users(i) has one item with ranks(i)
-Vt = V;
-Et = E;
+Vt = V.';
+Et = E.';
 I = R(:,1);
 J = R(:,2);
 Val = R(:,3);
-cand_count = crosstab(I);
-user_count = crosstab(I(Val>0));
-cum_user_count = cumsum(user_count);
-cum_user_count = [0;cum_user_count];
+cand_count = tabulate(I); cand_count = cand_count(:,2);
+user_count = tabulate(I(Val>0)); user_count = user_count(:,2);
+user_ind = cand_count>0;
+cand_count = cand_count(user_ind);
+user_count = user_count(user_ind);
+U = U(user_ind,:);
+Et = Et(:, user_ind);
+cum_cand_count = cumsum(cand_count);
+cum_cand_count = [0;cum_cand_count];
 user_cell = cell(length(cand_count), 1);
 rank_cell = cell(length(cand_count), 1);
 item_cell = cell(length(cand_count), 1);
+M = length(cand_count);
+N = max(J);
 for u=1:length(cand_count)
-    if cand_count(u)==0
-        continue;
-    end
     eu = Et(:,u);
-    u_start = cum_user_count(u)+1;
-    u_end = cum_user_count(u+1);
+    u_start = cum_cand_count(u)+1;
+    u_end = cum_cand_count(u+1);
+    assert(std(I(u_start:u_end))==0)
     cand_items = J(u_start:u_end);
     pred = U(u,:) * Vt(:,cand_items);
     cols = [pred.', Val(u_start:u_end),cand_items];

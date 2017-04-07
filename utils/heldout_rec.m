@@ -1,21 +1,27 @@
-function metric = heldout_rec(rec, mat, scoring, varargin)
+function [metric, topkmat] = heldout_rec(rec, mat, scoring, varargin)
 [test, ratio, split_mode, times, topk, cutoff, rec_opt] = process_options(varargin, 'test', [], ...
-    'split_ratio', 0.8, 'split_mode', 'un', 'times', 5, 'topk', -1, 'cutoff', 100);
+    'split_ratio', 0.8, 'split_mode', 'un', 'times', 5, 'topk', -1, 'cutoff', -1);
 
 if cutoff<=0
     if topk>0
         cutoff = topk;
     else
-        cutoff = 100;
+        cutoff = 200;
     end
+if topk > 0 && topk < cutoff
+    topk = cutoff;
 end
-
+topkmat = [];
 if ~isempty(test)
     % recommendation for the given dataset
     train = mat;
     %[P,Q]=iccf(train, 'K', 50, 'max_iter', 10);
     [P, Q] = rec(train, rec_opt{:});
-    metric = scoring(train, test, P,  Q, topk, cutoff);
+    if nargout == 2
+        [metric, topkmat] = scoring(train, test, P,  Q, topk, cutoff);
+    else
+        metric = scoring(train, test, P,  Q, topk, cutoff);
+    end
     fns = fieldnames(metric);
     for f=1:length(fns)
         fieldname = fns{f};

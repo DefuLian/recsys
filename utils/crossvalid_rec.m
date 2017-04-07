@@ -18,8 +18,10 @@ if cutoff<=0
     if topk>0
         cutoff = topk;
     else
-        cutoff = 100;
+        cutoff = 200;
     end
+if topk > 0 && topk < cutoff
+    topk = cutoff;
 end
 
 
