@@ -102,4 +102,10 @@ metric3 = item_recommend(@iccf, train>0, 'test', test, 'topk', 50,'cutoff',50);
 metric4 = item_recommend(@iccf, train>0, 'test', test, 'topk', 150,'cutoff',50);
 metric5 = item_recommend(@iccf, train>0, 'test', test, 'topk', 50,'cutoff',150);
 metric6 = item_recommend(@iccf, train>0, 'test', test, 'topk', 150,'cutoff',150);
+assert(nnz(metric0.recall(:,1:10) ~= metric1.recall(:,1:10))==0)
+assert(nnz(metric0.recall(:,1:10) ~= metric2.recall(:,1:10))==0)
+assert(nnz(metric0.recall(:,1:10) ~= metric3.recall(:,1:10))==0)
+assert(nnz(metric0.recall(:,1:10) ~= metric4.recall(:,1:10))==0)
+assert(nnz(metric0.recall(:,1:10) ~= metric5.recall(:,1:10))==0)
+assert(nnz(metric0.recall(:,1:10) ~= metric6.recall(:,1:10))==0)
 

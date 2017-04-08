@@ -1,23 +1,15 @@
-function [metric, topkmat] = evaluate_item(train, test, P, Q, topk, cutoff)
+function evalout = evaluate_item(train, test, P, Q, topk, cutoff)
 
-% user_count column vector storing how many entries in the test
-topkmat = [];    
+% user_count column vector storing how many entries in the test  
 if nnz(test)>0
     [mat_rank, user_count, cand_count] = Predict(test, train, P, Q, topk);
-    %ind = user_count > 0.0001;
-    %mat_rank = mat_rank(ind,:);
-    %user_count = user_count(ind);
-    %cand_count = cand_count(ind);
+    evalout = compute_item_metric(mat_rank, user_count, cand_count, topk, cutoff);
 else
     if topk<=0
         error('Please give positive topk value')
     end
-    [~, ~, ~, topkmat] = Predict(test, train, P, Q, topk);
-    metric = struct();
-    return
+    [~, ~, ~, evalout] = Predict(test, train, P, Q, topk);
 end
-
-metric = compute_item_metric(mat_rank, user_count, cand_count, topk, cutoff);
 end
 
 
@@ -28,7 +20,6 @@ function [ mat, user_count, cand_count, topkmat ] = Predict(test, train, U, V, t
 %   has action on corresponding item; E: training rating matrix, sharing
 %   similar meaning to R.
 %   users(i) has one item with ranks(i)
-
 if size(test, 2)==3 && sum(test(:,3)==0) > sum(test(:,3)>0)
     [ mat, user_count, cand_count ] = Predict_Tuple(test, train, U, V);
 else

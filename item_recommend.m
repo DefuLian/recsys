@@ -1,4 +1,4 @@
-function [metric, varargout] = item_recommend(rec, mat, varargin)
+function evalout = item_recommend(rec, mat, varargin)
 option = 'output';
 
 for i=1:2:length(varargin)
@@ -7,16 +7,16 @@ for i=1:2:length(varargin)
         break;
     elseif strcmp(varargin{i}, 'folds')
         option = 'crossvalid';
-        break        
+        break;        
     end
 end
 if strcmp(option, 'heldout')
-    metric = heldout_rec(rec, mat, @evaluate_item, varargin{:});
+    evalout = heldout_rec(rec, mat, @evaluate_item, varargin{:});
 end
 if strcmp(option, 'crossvalid')
-    metric = crossvalid_rec(rec, mat, @evaluate_item, varargin{:});
+    evalout = crossvalid_rec(rec, mat, @evaluate_item, varargin{:});
 end
 if strcmp(option, 'output')
-    [metric, varargout{1}] = heldout_rec(rec, mat, @evaluate_item, 'test', sparse(size(mat,1), size(mat,2)), varargin{:});
+    evalout = heldout_rec(rec, mat, @evaluate_item, 'test', sparse(size(mat,1), size(mat,2)), varargin{:});
 end
 end

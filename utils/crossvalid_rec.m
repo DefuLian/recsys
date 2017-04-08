@@ -14,16 +14,15 @@ function metric = crossvalid_rec(rec, mat, scoring, varargin)
 
 assert(folds>0)
 
-if cutoff<=0
+if topk > 0 && cutoff > 0
+    topk = cutoff;
+elseif cutoff<=0
     if topk>0
         cutoff = topk;
     else
         cutoff = 200;
     end
-if topk > 0 && topk < cutoff
-    topk = cutoff;
 end
-
 
 mat_fold = kFolds(mat, folds, fold_mode);
 metric = struct();
