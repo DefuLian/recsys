@@ -1,3 +1,7 @@
+%%
+[train,test] = readData('D:/BaiduNetdiskDownload/checkin_rerun_tkde',1);
+[U,V] = piccf(train>0, 'method', 'ALS', 'max_iter',1);
+[U,V] = iccf(train>0, 'max_iter',1);
 %% training beijing data
 
 data = readContent('/home/dlian/data/checkin/Beijing/data.txt');

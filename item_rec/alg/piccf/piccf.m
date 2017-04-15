@@ -1,4 +1,4 @@
-function [P, Q, U, V, metric] = iccf(R, varargin)
+function [P, Q, U, V, metric] = piccf(R, varargin)
 [M, N] = size(R);
 randn('state', 10);
 init_std = 0.01;
@@ -94,18 +94,22 @@ for i = 1 : M
     r = R(:, i);
     au = a(i);
     %main(r, w, Q, Qs, p, x, a, bR, dr, reg, bI)
-    iccf_sub(r, w,
-    Ind = w>0;     %Wi = repmat(w(Ind), 1, size(V, 2));
-    if(nnz(Ind) == 0)
-        Wi = zeros(0);
+    %fprintf('%d\t%d\n',i,nnz(w));
+    if true
+        P(i,:) = piccf_sub(+r, w, Q, QtQ, P(i,:), XUt(:,i), au, bR, dR(:,i), reg_u, bI);
     else
-        Wi = diag(w(Ind));
+        Ind = w>0;     
+        if(nnz(Ind) == 0)
+            Wi = zeros(0);
+        else
+            Wi = diag(w(Ind));
+        end
+        sub_Q = Q(Ind,:);
+        QCQ = sub_Q.' * Wi * sub_Q + au * QtQ + reg_u * eye(K); %Vt_minus_V = sub_V.' * (Wi .* sub_V) + invariant;
+        %Y = Qt * (w .* r - w .* bI + au * (d .* r)) - au * bR + XUt(:,i) ;
+        Y = Qt * (w .* r - w .* bI ) + au * dR(:,i) - au * bR + XUt(:,i) ;
+        P(i,:) = QCQ \ Y;
     end
-    sub_Q = Q(Ind,:);
-    QCQ = sub_Q.' * Wi * sub_Q + au * QtQ + reg_u * eye(K); %Vt_minus_V = sub_V.' * (Wi .* sub_V) + invariant;
-    %Y = Qt * (w .* r - w .* bI + au * (d .* r)) - au * bR + XUt(:,i) ;
-    Y = Qt * (w .* r - w .* bI ) + au * dR(:,i) - au * bR + XUt(:,i) ;
-    P(i,:) = QCQ \ Y;
 end
 end
 function P = Optimize_CD_fast(R, W, Q, P, X, U, reg_u, a, d, bI)
