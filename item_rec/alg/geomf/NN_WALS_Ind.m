@@ -20,16 +20,13 @@ function [ U, V, X ] = NN_WALS_Ind(  R, Y, K, varargin )
                    'reg_i', 0.01, 'reg_1', 0.01, 'inid_std', 0.01);
 
 [M, N] = size(R);
-%U = randn(M, K) * init_std;
-%V = randn(N, K) * init_std;
-load uv.mat
+U = randn(M, K) * init_std;
+V = randn(N, K) * init_std;
 X = sparse(M, size(Y, 2));
 W = R * alpha;
-% alternatively, we can set it as 
-% W = log(1+ R/epsilon); where epsilon = 1e-8;
-gradUV = 0;
+
 for iter = 1: 1
-    %[U, V, gradUV ] = Optimize_Latent(W, U, V, X, Y, reg_u, reg_i, num_iter);
+    [U, V, gradUV ] = Optimize_Latent(R, W, U, V, X, Y, reg_u, reg_i, num_iter);
     [X, gradX] = Optimize_Activity(W', X, Y, U, V, reg_1);
     grad = sqrt(gradX + gradUV);
     fprintf('Iteration=%d, gradient norm %f\n', iter, grad);
@@ -41,45 +38,41 @@ for iter = 1: 1
 end
 
 end
-function [U, V, gradUV] = Optimize_Latent(W, U, V, X, Y, reg_u, reg_i, num_iter)
+function [U, V, gradUV] = Optimize_Latent(R, W, U, V, X, Y, reg_u, reg_i, num_iter)
 Wt = W.';
+Rt = R.';
 for iter = 1:num_iter
-    VtV = V.' * V + reg_u * eye(size(U,2));
-    VtY = V.' * Y;
-    [U, gradU ] = Optimize(Wt, U, V, VtV, VtY, X, Y);
-    UtU = U.' * U + reg_i * eye(size(U,2));
-    UtX = U.' * X;
-    [V, gradV ] = Optimize(W, V, U, UtU, UtX, Y, X);
+    VtV = V.' * V + reg_u * eye(size(U,2)); % NK^2
+    VtY = V.' * Y; % K||Y||_0
+    [U, gradU ] = Optimize(Rt, Wt, U, V, VtV, VtY, X, Y);
+    UtU = U.' * U + reg_i * eye(size(U,2)); % MK^2
+    UtX = U.' * X; % K||X||_0
+    [V, gradV ] = Optimize(R, W, V, U, UtU, UtX, Y, X);
     grad = sqrt(gradU + gradV); %norm([gradU; gradV], 'fro');
     fprintf('Sub iteration for latent vector, Iteration=%d, gradient norm %f\n', iter, gradnorm);
-    if iter == 1
-        initgrad = grad;
-    elseif grad < tol * initgrad
-            break;
-    end
 end
 gradUV = grad ^2;
 end
 
-function [U, gradU] = Optimize(W, Uinit, V, VtV, VtY, X, Y)
+function [U, gradU] = Optimize(R, W, U, V, VtV, VtY, Xt, Yt)
 [~, M] = size(W);
-U = zeros(size(Uinit));
 gradU = 0;
 Vt = V.';
 for i = 1 : M
     fprintf('%d\n',i);
-    w = W(:,i);
+    w = W(:, i); 
+    r = R(:, i);
     if nnz(w) == 0
         continue;
     end
     Ind = w>0; Wi = diag(w(Ind));    %Wi = repmat(w(Ind), 1, size(V, 2));
     sub_V = V(Ind,:);
-    sub_Y = Y(Ind,:);
-    VCV = sub_V.' * Wi * sub_V + VtV; %Vt_minus_V = sub_V.' * (Wi .* sub_V) + invariant;
-    VCY = sub_V.' * Wi * sub_Y + VtY;
-    Estimate = Vt * w - VCY * (X(i,:))';
+    sub_Yt = Yt(:,Ind);
+    VCV = sub_V.' * Wi * sub_V + VtV; % |r_i|_0 K^2
+    VCY = sub_V.' * Wi * (sub_Yt.') + VtY; % |r_i|_0 KL
+    Estimate = Vt * (w .* r + r) - VCY * Xt(:,i); % |x_i| K + |r_i| K
     u = VCV \ Estimate;
-    grad = (Uinit(i,:) - u') * VCV ;
+    grad = (U(i,:) - u') * VCV ;
     U(i,:) = u;
     gradU = gradU + sum(grad .^2);
 end
@@ -87,9 +80,10 @@ end
 end
 
 
-function [X, gradX] = Optimize_Activity(W, Xinit, Y, U, V, reg)
+function [X, gradX] = Optimize_Activity(R, W, X, Y, U, V, reg)
 YtY = Y.' * Y;
 YtV = Y.' * V;
+Xt = X.';
 [~, M] = size(W);
 gradX = 0;
 Yt = Y.';
@@ -97,10 +91,11 @@ user_cell = cell(M,1);
 item_cell = cell(M,1);
 val_cell = cell(M,1);
 Ut = U.';
-parfor u = 1:M
+for u = 1:M
     fprintf('%d\n', u);
-    x = (Xinit(u, :))';
+    x = (Xt(:,u))';
     w = W(:,u);
+    r = R(:,u);
     Ind = w>0; wu = w(Ind); Wu = spdiags(wu, 0, length(wu), length(wu));
     sub_Y = Y(Ind, :);
     sub_Yt = Yt(:, Ind);
@@ -108,7 +103,7 @@ parfor u = 1:M
     YC = sub_Yt * Wu;
     YCY = YC * sub_Y + YtY;
     YCV = YC * sub_V + YtV;
-    grad_invariant =  YCV * Ut(:,u) - sub_Yt * wu + reg;
+    grad_invariant =  YCV * Ut(:,u) - Yt * (w .* r + r) + reg;
     x = LineSearch(YCY, grad_invariant, x);
     [loc, I, val ] = find(x);
     user_cell{u} = u * I;

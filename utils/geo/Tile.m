@@ -13,6 +13,10 @@ classdef Tile
        function ms = MapSize(level)
            ms = bitshift(256, level);
        end
+       function gr = GroundResoulution(lat, level)
+           lat = Tile.Clip(lat, Tile.MinLatitude, Tile.MaxLatitude);
+           gr = cos(lat * pi / 180) * 2 * pi * Tile.EarthRadius / MapSize(level);
+       end
    end
    methods(Static)
        function pm=LatLons2PXYs(lm,level)
@@ -95,8 +99,6 @@ classdef Tile
                end
            end
        end
-       
-       
    end
 end
 

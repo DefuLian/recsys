@@ -51,7 +51,7 @@ for f=1:length(fns)
     fieldname = fns{f};
     field = metric.(fieldname);
     field_mean = field(1,:) / folds;
-    field_std = field(2,:)./folds - field_mean .* field_mean;
+    field_std = sqrt(field(2,:)./folds - field_mean .* field_mean);
     metric.(fieldname) = [field_mean; field_std];
 end
 end

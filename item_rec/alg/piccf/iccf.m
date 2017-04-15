@@ -93,17 +93,22 @@ for i = 1 : M
     w = W(:, i);
     r = R(:, i);
     au = a(i);
-    Ind = w>0;     %Wi = repmat(w(Ind), 1, size(V, 2));
-    if(nnz(Ind) == 0)
-        Wi = zeros(0);
+    %main(r, w, Q, Qs, p, x, a, bR, dr, reg, bI)
+    if true
+        P(i,:) = iccf_sub(r, w, Q, QtQ, P(i,:), XUt(:,i), au, bR, dR(:,i), reg_u, bI);
     else
-        Wi = diag(w(Ind));
+        Ind = w>0;     
+        if(nnz(Ind) == 0)
+            Wi = zeros(0);
+        else
+            Wi = diag(w(Ind));
+        end
+        sub_Q = Q(Ind,:);
+        QCQ = sub_Q.' * Wi * sub_Q + au * QtQ + reg_u * eye(K); %Vt_minus_V = sub_V.' * (Wi .* sub_V) + invariant;
+        %Y = Qt * (w .* r - w .* bI + au * (d .* r)) - au * bR + XUt(:,i) ;
+        Y = Qt * (w .* r - w .* bI ) + au * dR(:,i) - au * bR + XUt(:,i) ;
+        P(i,:) = QCQ \ Y;
     end
-    sub_Q = Q(Ind,:);
-    QCQ = sub_Q.' * Wi * sub_Q + au * QtQ + reg_u * eye(K); %Vt_minus_V = sub_V.' * (Wi .* sub_V) + invariant;
-    %Y = Qt * (w .* r - w .* bI + au * (d .* r)) - au * bR + XUt(:,i) ;
-    Y = Qt * (w .* r - w .* bI ) + au * dR(:,i) - au * bR + XUt(:,i) ;
-    P(i,:) = QCQ \ Y;
 end
 end
 function P = Optimize_CD_fast(R, W, Q, P, X, U, reg_u, a, d, bI)
@@ -169,30 +174,3 @@ function [X,v] = ConjGrad(A, B, reg, varargin)
     v = v(1:i);
 end
 
-function loss = Loss(R, W, P, Q, a, d)
-[M, N] = size(R);
-%[a, d] = process_options(varargin, 'usr_w', ones(M,1) , 'item_w', ones(N,1));
-K = size(P,2);
-om = ones(M, 1);
-on = ones(N, 1);
-ok = ones(K, 1);
-WR = (W .* R + spdiags(a,0,M, M) * R * spdiags(d,0,N,N));
-R2 = R.^2;
-WR2 = om.' * ( W .* R2 + spdiags(a,0,M, M) * R2 * spdiags(d,0,N,N) ) * on;
-I = on.' * (WR.' * P .* Q) * ok;
-L = 0;
-Wt = W.';
-QtQ = Q.' * spdiags(d, 0, N, N) * Q;
-for i=1:M
-    w = Wt(:, i);
-    p = P(i,:);
-    if nnz(w) == 0
-        continue;
-    end
-    Ind = w>0; Wi = diag(w(Ind));    %Wi = repmat(w(Ind), 1, size(V, 2));
-    sub_Q = Q(Ind,:);
-    QcQ = sub_Q.' * Wi * sub_Q + a(i) * QtQ;
-    L = L + p * QcQ * p.';
-end
-loss = WR2 + L - 2 * I;
-end

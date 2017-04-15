@@ -44,13 +44,16 @@ else
     if nargout == 4
         topk_cell = cell(num_step, 1);
     end
+    [Utc, Vc] = split_latent_matrix(Ut,V);
     for i=1:num_step
         start_u = (i-1)*step +1;
         end_u = min(i * step, M);
-        subU = Ut(:, start_u:end_u);
+        %subU = Ut(:, start_u:end_u); %%
+        subUc = get_subUc(Utc, start_u, end_u);
         subR = Rt(:, start_u:end_u);
         subE = Et(:, start_u:end_u);
-        subR_E = full(V * subU);
+        %subR_E1 = full(V * subU); %%
+        subR_E = multiply_cell(subUc, Vc);
         subR_E(subE > 0) = -inf;
         if topk>0
             [~, Index] = maxk(subR_E, topk);
@@ -81,6 +84,32 @@ else
 end
 end
 
+function [Utc, Vc] = split_latent_matrix(Ut,V)
+M = size(Ut,2);
+N = size(V,1);
+urows = sum(Ut~=0, 2);
+dense_u_cols = urows ./M > 0.5;
+vrows = sum(V~=0);
+dense_v_cols = vrows ./N > 0.5;
+Utc = {full(Ut(dense_u_cols,:)),Ut(~dense_u_cols,:)};
+Vc = {full(V(:,dense_v_cols)),V(:,~dense_v_cols)};
+end
+function subUtc = get_subUc(Utc, starti, endi)
+subUtc = cell(length(Utc),1);
+for i=1:length(Utc)
+    subUtc{i} = Utc{i}(:, starti:endi);
+end
+end
+function mat = multiply_cell(Utc, Vc)
+
+for i=1:length(Utc)
+    if i ==1
+        mat = Vc{i} * Utc{i};
+    else
+        mat = mat + Vc{i} * Utc{i};
+    end
+end
+end
 
 function [ mat, user_count, cand_count ] = Predict_Tuple(R, E, U, V )
 %Predict: Based user and item latent vector, predict items' rank for each
