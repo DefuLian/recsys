@@ -1,4 +1,4 @@
-function metric = crossvalid_rec(rec, mat, scoring, varargin)
+function [metric,elapsed] = crossvalid_rec(rec, mat, scoring, varargin)
 % rec: recommendation method
 % mat: matrix storing records
 % mode of cross validation: 
@@ -26,16 +26,19 @@ end
 
 mat_fold = kFolds(mat, folds, fold_mode);
 metric = struct();
+elapsed = zeros(1,2);
 for i=1:folds
     test = mat_fold{i};
     train = mat - test;
-    [P, Q] = rec(train, rec_opt{:});
+    tic;[P, Q] = rec(train, rec_opt{:}); elapsed(1) = elapsed(1) + toc/folds;
+    tic;
     if strcmp(fold_mode, 'i') % in this mode, only those items within the same fold are required for comparison
         ind = sum(test)>0;
         metric_fold = scoring(train(:,ind), test(:,ind), P,  Q(ind,:), topk, cutoff);
     else
         metric_fold = scoring(train, test, P,  Q, topk, cutoff);
     end
+    elapsed(2) = elapsed(2) + toc/folds;
     fns = fieldnames(metric_fold);
     for f=1:length(fns)
         fieldname = fns{f};

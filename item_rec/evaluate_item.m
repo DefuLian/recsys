@@ -36,7 +36,7 @@ else
     end
     [N, M] = size(Rt);
     cand_count = N - sum(Et > 0);
-    step = 100;
+    step = 1000;
     num_step = floor((M + step-1)/step);
     user_cell = cell(num_step, 1);
     rank_cell = cell(num_step, 1);

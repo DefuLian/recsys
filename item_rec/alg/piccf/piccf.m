@@ -2,10 +2,9 @@ function [P, Q, U, V, metric] = piccf(R, varargin)
 [M, N] = size(R);
 randn('state', 10);
 init_std = 0.01;
-% method = CD/ALS
 [X, Y, alpha, test, max_iter, K, P, Q, reg_u, reg_i, is_item_fixed, is_user_fixed, ...
     user_bias, item_bias, usr_w, item_w, method, k_verbose, pos_eval] = ...
-   process_options(varargin, 'X', zeros(M,0), 'Y', zeros(N,0), 'alpha', 30, 'test', [], 'max_iter', 10, 'K', 30, 'P', [], 'Q', [], ...
+   process_options(varargin, 'X', zeros(M,0), 'Y', zeros(N,0), 'alpha', 50, 'test', [], 'max_iter', 20, 'K', 50, 'P', [], 'Q', [], ...
    'reg_u', 0.01, 'reg_i', 0.01, 'is_item_fixed', false, 'is_user_fixed', false, 'user_bias', false, 'item_bias', false,...
    'usr_w', ones(M,1), 'item_w', ones(N,1), 'method', 'CD', 'k-v', 5, 'pos_eval',200);
 
@@ -41,25 +40,12 @@ else
 end
 for iter=1:max_iter
     if(~is_user_fixed)
-        if strcmp(method, 'ALS')
-            P = Optimize(Rt, Wt, Q(:,1:K+1), P(:,1:K+1), X, U, reg_u, usr_w, item_w, Q(:,K+2));
-        elseif strcmp(method, 'CD')
-            %P1 = Optimize_CD(Rt, Wt, Q(:,1:K+1), P(:,1:K+1), X, U, reg_u, usr_w, item_w, Q(:,K+2));
-            P = Optimize_CD_fast(Rt, Wt, Q(:,1:K+1), P(:,1:K+1), X, U, reg_u, usr_w, item_w, Q(:,K+2));
-        else
-            error('Unsupported optimization method')
-        end
+        P = Optimize(Rt, Wt, Q(:,1:K+1), P(:,1:K+1), X, U, reg_u, usr_w, item_w, Q(:,K+2), method);
         U = OptimizeUU(X, P, U, reg_uf);
         P = [P(:,1:(K+1)),bias_M];
     end
     if(~is_item_fixed)
-        if strcmp(method, 'ALS')
-            Q = Optimize(R, W, [P(:,1:K),bias_M], [Q(:,1:K), Q(:,K+2)], Y, V, reg_i, item_w, usr_w, P(:,K+1));
-        elseif strcmp(method, 'CD')
-            Q = Optimize_CD_fast(R, W, [P(:,1:K),bias_M], [Q(:,1:K), Q(:,K+2)], Y, V, reg_i, item_w, usr_w, P(:,K+1));
-        else
-            error('Unsupported optimization method')
-        end
+        Q = Optimize(R, W, [P(:,1:K),bias_M], [Q(:,1:K), Q(:,K+2)], Y, V, reg_i, item_w, usr_w, P(:,K+1), method);
         V = OptimizeUU(Y, Q, V, reg_if);
         Q = [Q(:,1:K), bias_N, Q(:,K+1)];
     end
@@ -78,7 +64,7 @@ if(~isempty(test))
 end
 end
 
-function P = Optimize(R, W, Q, P, X, U, reg_u, a, d, bI)
+function P = Optimize(R, W, Q, P, X, U, reg_u, a, d, bI, method)
 XU = reg_u * X * U; % M x K
 XUt = XU.';
 K = size(Q,2);
@@ -89,15 +75,15 @@ Qt = Q.';
 QtQ = Qt * spdiags(d, 0, length(d), length(d)) * Q;
 bR = Qt * (bI .* d);
 dR = Qt * spdiags(d, 0, length(d), length(d)) * R;
-for i = 1 : M
+parfor i = 1 : M
     w = W(:, i);
     r = R(:, i);
     au = a(i);
     %main(r, w, Q, Qs, p, x, a, bR, dr, reg, bI)
     %fprintf('%d\t%d\n',i,nnz(w));
-    if true
+    if strcmp(method, 'CD')
         P(i,:) = piccf_sub(+r, w, Q, QtQ, P(i,:), XUt(:,i), au, bR, dR(:,i), reg_u, bI);
-    else
+    elseif strcmp(method, 'ALS')
         Ind = w>0;     
         if(nnz(Ind) == 0)
             Wi = zeros(0);
@@ -109,13 +95,10 @@ for i = 1 : M
         %Y = Qt * (w .* r - w .* bI + au * (d .* r)) - au * bR + XUt(:,i) ;
         Y = Qt * (w .* r - w .* bI ) + au * dR(:,i) - au * bR + XUt(:,i) ;
         P(i,:) = QCQ \ Y;
+    else
+        error('Unsupported optimization method')
     end
 end
-end
-function P = Optimize_CD_fast(R, W, Q, P, X, U, reg_u, a, d, bI)
-XU = reg_u * X * U; % M x K
-Qs = Q.' * spdiags(d, 0, length(d), length(d)) * Q;
-P = iccf_sub(+R, W, Q, P, XU, reg_u, a, d, Qs, bI);
 end
 
 function U = OptimizeUU(X, P, Uinit, reg)

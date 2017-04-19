@@ -77,7 +77,7 @@ YtV = Yt * V;
 user_cell = cell(M,1);
 item_cell = cell(M,1);
 val_cell = cell(M,1);
-for i = 1:M
+parfor i = 1:M
     w = Wt(:,i);
     r = Rt(:,i);
     Ind = w>0; wi = w(Ind); ri = r(Ind);
