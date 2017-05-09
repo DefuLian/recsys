@@ -4,7 +4,7 @@ randn('state', 10);
 
 [max_iter, alpha, reg_u, reg_i, reg_1, init_std, K, Y] = ...
    process_options(varargin, 'max_iter', 10, 'alpha', 30, 'reg_u', 0.01, ...
-                   'reg_i', 0.01, 'reg_1', 0.01, 'inid_std', 0.01, 'K', 30, 'Y', zeros(N,0));
+                   'reg_i', 0.01, 'reg_1', 0.01, 'init_std', 0.01, 'K', 30, 'Y', zeros(N,0));
 Yt = Y.';
 U = randn(M, K) * init_std;
 V = randn(N, K) * init_std;
@@ -77,7 +77,7 @@ YtV = Yt * V;
 user_cell = cell(M,1);
 item_cell = cell(M,1);
 val_cell = cell(M,1);
-parfor i = 1:M
+for i = 1:M
     w = Wt(:,i);
     r = Rt(:,i);
     Ind = w>0; wi = w(Ind); ri = r(Ind);
@@ -89,7 +89,12 @@ parfor i = 1:M
     subYt = Yt(:, Ind);
     subV = V(Ind, :);
     YC = subYt * Wi;
-    grad_invariant =  YC * (sqrt(wi) .* (subV * Ut(:,i))) + YtV * Ut(:,i) - subYt * (wi .* ri + ri) + reg;
+    %grad_invariant =  YC * (sqrt(wi) .* (subV * Ut(:,i))) + YtV * Ut(:,i) - subYt * (wi .* ri + ri) + reg;
+    %x1 = line_search(YC, YtY, grad_invariant, Xt(:,i));
+    grad_invariant =  YC * (sqrt(wi) .* (subV * Ut(:,i))) - subYt * (wi .* ri + ri) + YtV * Ut(:,i)  + reg;
+    J = 1:length(grad_invariant);
+    ind = grad_invariant<=0;
+    grad_invariant = sparse(J(ind), 1, grad_invariant(ind), length(grad_invariant), 1);
     x = line_search(YC, YtY, grad_invariant, Xt(:,i));
     %YCY = YC * YC.' + YtY;
     %YCV = YC * Wi * subV + YtV;

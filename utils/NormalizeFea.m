@@ -1,4 +1,4 @@
-function fea = NormalizeFea(fea,row)
+function fea = NormalizeFea(fea,varargin)
 % if row == 1, normalize each row of fea to have unit norm;
 % if row == 0, normalize each column of fea to have unit norm;
 %
@@ -9,18 +9,16 @@ function fea = NormalizeFea(fea,row)
 %   Written by Deng Cai (dengcai AT gmail.com)
 %
 
-if ~exist('row','var')
-    row = 1;
-end
+[row, p] = process_options(varargin, 'row', 1, 'p', 2);
 
 if row
     nSmp = size(fea,1);
-    feaNorm = max(1e-14,full(sum(fea.^2,2)));
-    fea = spdiags(feaNorm.^-.5,0,nSmp,nSmp)*fea;
+    feaNorm = max(1e-14,full(sum(fea.^p,2)));
+    fea = spdiags(feaNorm.^-(1/p),0,nSmp,nSmp)*fea;
 else
     nSmp = size(fea,2);
-    feaNorm = max(1e-14,full(sum(fea.^2,1))');
-    fea = fea*spdiags(feaNorm.^-.5,0,nSmp,nSmp);
+    feaNorm = max(1e-14,full(sum(fea.^p,1))');
+    fea = fea*spdiags(feaNorm.^-(1/p),0,nSmp,nSmp);
 end
             
 return;

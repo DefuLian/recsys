@@ -91,8 +91,9 @@ urows = sum(Ut~=0, 2);
 dense_u_cols = urows ./M > 0.5;
 vrows = sum(V~=0);
 dense_v_cols = vrows ./N > 0.5;
-Utc = {full(Ut(dense_u_cols,:)),Ut(~dense_u_cols,:)};
-Vc = {full(V(:,dense_v_cols)),V(:,~dense_v_cols)};
+cols = dense_u_cols | dense_v_cols.';
+Utc = {full(Ut(cols,:)),Ut(~cols,:)};
+Vc = {full(V(:,cols)),V(:,~cols)};
 end
 function subUtc = get_subUc(Utc, starti, endi)
 subUtc = cell(length(Utc),1);

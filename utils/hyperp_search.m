@@ -18,7 +18,7 @@ for iter_ele=1:total_ele
     end
     [metric, times(iter_ele,:)] = alg_func(para{:});
     cur_metric = metric_func(metric);
-    values(iter_ele) = val;
+    values(iter_ele,:) = val;
     metrics{iter_ele} = metric;
     if max_metric < cur_metric
         max_val = para;
