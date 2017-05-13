@@ -17,15 +17,15 @@ There are typle types of evaluation schemes, including cross validation and hold
 
 	1. The following command specifies cross validation, where 'folds' means the number of folds. And it returns 'metric' which records recall, precision, ndcg, map, AUC, MPR(Mean Percentile Rank), and 'elapsed' which records training and testing time respectively.
 		
-		[metric, elapsed] = item_recommend(@(mat) iccf(mat, 'K', 50, 'max_iter', 20), data, 'folds', 5);
+	[metric, elapsed] = item_recommend(@(mat) iccf(mat, 'K', 50, 'max_iter', 20), data, 'folds', 5);
 
-		There are five types of matrix split methods, by specified by 'fold_mode', whose first three options are 'un' (default) user-oriented split, 'in' item-oriented split, 'en' entry-oriented split. For example, 'un' indicates splitting each user data into 'folds' folds and aggregating the respective fold of all users together. Besides, 'u' splits users into 'folds' folds while 'i' splits items into 'folds' folds. The former one is used for cold-start user evaluation while the latter one is used for cold-start item evaluation.
+	There are five types of matrix split methods, by specified by 'fold_mode', whose first three options are 'un' (default) user-oriented split, 'in' item-oriented split, 'en' entry-oriented split. For example, 'un' indicates splitting each user data into 'folds' folds and aggregating the respective fold of all users together. Besides, 'u' splits users into 'folds' folds while 'i' splits items into 'folds' folds. The former one is used for cold-start user evaluation while the latter one is used for cold-start item evaluation.
 
 	2. The following command specifies holdout evaluation, specified by the ratio of the testing set. Note that it is possible to specify the ratio of the training set by 'train_ratio' (default=1), but it means that in can not be used separately. In other words, it should always be used together with 'test_ratio', since it means it will get the training set from the remaining part by excluding the test set. Besides, it should be accompanied by 'times' option, indicating how many times are need for such holdout evaluation with specified test_ratio.
 	
-		item_recommend(@(mat) iccf(mat, 'K', 50, 'max_iter', 20), data, 'test_ratio', 0.2, 'times', 5);
+	item_recommend(@(mat) iccf(mat, 'K', 50, 'max_iter', 20), data, 'test_ratio', 0.2, 'times', 5);
 	
-		There are also five types of matrix split methods, specified by 'split_mode', the same as 'fold_mode'.
+	There are also five types of matrix split methods, specified by 'split_mode', the same as 'fold_mode'.
 		
 	3. If only dataset is provided, it will return topk recommendation results for each user, where topk is a parameter with defalult value 200.
 	
