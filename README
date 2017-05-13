@@ -32,17 +32,17 @@ Besides, it provides some easy-to-use utility function, including 'hypersearch' 
 
 Here I would like to emphsis the iccf algorithm[3], since it subsumes weighted regularized matrix factrization, and enables taking any feature from both user side and item side into account. Below I will introduce the usage of this algorithm. A lot of options, including dimension 'K', maximum number of iteration 'max_iter', the weight of positive preference 'alpha',  could be specified in this algoritm. In order to specify features from user side and item side, it can specify 'X' as user side feature matrix and 'Y' as item size featur matrix. Below lists some examples
 
-  item_recommend(@(mat) iccf(mat, 'K', 50, 'max_iter', 20, 'alpha', 30, 'X', zeros(size(data,1), 0), 'Y', zeros(size(data, 2), 0)), data, 'test_ratio', 0.2, 'times', 5); # this is equivelent to WRMF[1].
+  item_recommend(@(mat) iccf(mat, 'K', 50, 'max_iter', 20, 'alpha', 30), data, 'test_ratio', 0.2, 'times', 5); # this is equivelent to WRMF[1].
 	
-Note that in this case zeros(size(data,1), 0) is a default value of 'X' and  zeros(size(data, 2), 0) is a default value of 'Y'.
+Note that in this case zeros(size(data,1), 0) is the default value of 'X' and  zeros(size(data, 2), 0) is the default value of 'Y'.
 
-When item/user features are fed, 'reg_u' and 'reg_i' is used to specify the weight of these features.
+When item/user features are fed, 'reg_u' and 'reg_i' is used to specify the weight/importance of these features.
 
-  item_recommend(@(mat) iccf(mat, 'K', 50, 'max_iter', 20, 'alpha', 30, 'Y', Y, 'reg_i', 100), data, 'test_ratio', 0.2, 'times', 5); 
+  item_recommend(@(mat) iccf(mat, 'K', 50, 'max_iter', 20, 'alpha', 30, 'Y', item_featue_matrix, 'reg_i', 100), data, 'test_ratio', 0.2, 'times', 5); 
 	
 It is worth mentioning that 'piccf' is a parallel version of iccf. You can specify the same options as iccf.
 
-When using the iccf algorithm for recommendation from implicit feedback datasets, 'alpha', 'reg_u' and 'reg_i' are three important parameters affecting the recommendation performance. And these parameters may re-tune when changing the dimension of latent space.
+When using the iccf algorithm for recommendation from implicit feedback datasets, 'alpha', 'reg_u' and 'reg_i' are three important parameters affecting the recommendation performance. And these parameters may be re-tuned when changing the dimension of latent space.
 	
 [1] Hu, Y., Koren, Y., & Volinsky, C. (2008, December). Collaborative filtering for implicit feedback datasets.  Proceedings of ICDM 2015 (pp. 263-272). IEEE.
 [2] Lian, D., Zhao, C., Xie, X., Sun, G., Chen, E., & Rui, Y. GeoMF: joint geographical modeling and matrix factorization for point-of-interest recommendation. Proceedings of SIGKDD 2014 (pp. 831-840). ACM.
