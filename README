@@ -3,26 +3,30 @@ mrec: A Library of Recommendation System based on Matlab.
 
 Introduction
 -----------------------------------------------------------------------------------
-mrec is an academic project. Currently, it targets for item recommendation from implicit feedback, since rating prediction based recommendation is still in develop. It supports cross validation and heldout evaluation. It includes several important algorithms tailored for implicit feedback, such as WRMF, content-aware collaborative filtering for implicit feedback, GWMF (graph regularized weighted matrix factorization). Also it includes some state-of-the-art algorithm for location recommendation, such as IRenMF, GeoMF. In the future, we will further implement algorithms including Bayesian personalized ranking based matrix factorization, non-negative matrix factorization, Poisson Matrix Factorization.
+mrec is an academic project. Currently, it targets for item recommendation from implicit feedback, since rating prediction based recommendation is still in develop. It supports cross validation and holdout evaluation. It includes several important algorithms tailored for implicit feedback, such as WRMF, content-aware collaborative filtering for implicit feedback, GWMF (graph regularized weighted matrix factorization). Also it includes some state-of-the-art algorithm for location recommendation, such as IRenMF, GeoMF. In the future, we will further implement algorithms including Bayesian personalized ranking based matrix factorization, non-negative matrix factorization, Poisson Matrix Factorization.
 
 
 Usage
 -----------------------------------------------------------------------------------
-It is very simple to use via the portal "item_recommend".  The following parameter are mandatory 
+It is very simple to use via the portal "item_recommend".  The following two parameters are mandatory 
 
 1: The first parameter is a handle of recommendation algorithm, whose first parameter is the user-item matrix, and other options are provided by name-value pair. 
 2: The second parameter is a user-item preference matrix.
 
-There are three types of evaluation schemes, including cross validation and heldout evaluation. 
+There are three types of evaluation schemes, including cross validation and holdout evaluation. 
 
-The following command specifies cross validation, where 'folds' means the number of folds.
-	item_recommend(@(mat) iccf(mat, 'K', 50, 'max_iter', 20), data, 'folds', 5);
+The following command specifies cross validation, where 'folds' means the number of folds. And it returns 'metric' which records recall, precision, ndcg, map, AUC, MPR(Mean Percentile Rank), and 'elapsed' which records training and testing time respectively.
+	[metric, elapsed] = item_recommend(@(mat) iccf(mat, 'K', 50, 'max_iter', 20), data, 'folds', 5);
 
-There are five types of matrix split methods, by specified by 'fold_mode', whose first three options are 'un' (default) user-oriented split, 'in' item-oriented split, 'en' entry-oriented split. For example, 'un' indicates splitting each user data into 'folds' folds and aggregating the respective fold of all users together. Besides, 'u' splits users into 'folds' folds while 'i' splts items into 'folds' folds. The former one is used for cold-start user evaluation while the latter one is used for cold-start item evaluation.
+There are five types of matrix split methods, by specified by 'fold_mode', whose first three options are 'un' (default) user-oriented split, 'in' item-oriented split, 'en' entry-oriented split. For example, 'un' indicates splitting each user data into 'folds' folds and aggregating the respective fold of all users together. Besides, 'u' splits users into 'folds' folds while 'i' splits items into 'folds' folds. The former one is used for cold-start user evaluation while the latter one is used for cold-start item evaluation.
 
-The following command specifies heldout evaluation, specified by the ratio of the testing set. Note that it is possible to specify the ratio of the training set by 'train_ratio' (defalut=1), but it means that in can not be used separately. In other words, it should always be used together with 'test_ratio', since it means it will get the training set from the remaining part by excluding the test set. Besides, it should be accompanied by 'times' option, indicating how many times are need for such heldout evaluation with specified test_ratio.
+The following command specifies holdout evaluation, specified by the ratio of the testing set. Note that it is possible to specify the ratio of the training set by 'train_ratio' (default=1), but it means that in can not be used separately. In other words, it should always be used together with 'test_ratio', since it means it will get the training set from the remaining part by excluding the test set. Besides, it should be accompanied by 'times' option, indicating how many times are need for such holdout evaluation with specified test_ratio.
 	item_recommend(@(mat) iccf(mat, 'K', 50, 'max_iter', 20), data, 'test_ratio', 0.2, 'times', 5);
 	
-There are also five types of matrix split methods, specified by 'split_mode', the same as 'fold_mode'
+There are also five types of matrix split methods, specified by 'split_mode', the same as 'fold_mode'.
+
+Finally, it provides some easy-to-use utility function, including 'hypersearch' for searching parameters, 'readContent' to read matrix from tuple-based dataset file/ feature file. You can refer script/locrec/script.m for detailed usage.
+
+
 
 
