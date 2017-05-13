@@ -24,8 +24,11 @@ There are three types of library running schemes, including cross validation and
   item_recommend(@(mat) iccf(mat, 'K', 50, 'max_iter', 20), data, 'test_ratio', 0.2, 'times', 5);
 	
   There are also five types of matrix split methods, specified by 'split_mode', the same as 'fold_mode'.
-		
-  3. If only dataset is provided, it will return topk recommendation results for each user, where topk is a parameter with defalult value 200.
+  
+  3. If you have both training set and test set, using the following commands for training and testing.
+  item_recommend(@(mat) iccf(mat, 'alpha', 30, 'K', 50, 'max_iter', 20), train, 'test', test);
+  
+  4. If only dataset is provided, it will return topk recommendation results for each user, where topk is a parameter with defalult value 200.
 	
 
 Besides, it provides some easy-to-use utility function, including 'hypersearch' for searching parameters, 'readContent' to read matrix from tuple-based dataset file/ feature file. You can refer script/locrec/script.m for detailed usage.
