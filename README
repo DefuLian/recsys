@@ -6,7 +6,7 @@ Introduction
 mrec is an academic project. Currently, it targets for item recommendation from implicit feedback, since rating prediction based recommendation is still in develop. It supports cross validation and holdout evaluation. It includes several important algorithms tailored for implicit feedback, such as WRMF[1], content-aware collaborative filtering for implicit feedback[3], GWMF (graph regularized weighted matrix factorization). Also it includes some state-of-the-art algorithm for location recommendation, such as IRenMF[4], GeoMF[2]. In the future, we will further implement algorithms including Bayesian personalized ranking based matrix factorization, non-negative matrix factorization, Poisson Matrix Factorization.
 
 
-Usage
+Usage (Refer to test/dataset/test_script.m for examples)
 -----------------------------------------------------------------------------------
 It is very simple to use via the portal "item_recommend".  The following two parameters are mandatory 
   1) a handle of recommendation algorithm, whose first parameter is the user-item matrix, and other options are provided by name-value pair. 
