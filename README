@@ -15,7 +15,8 @@ It is very simple to use via the portal "item_recommend".  The following two par
 There are three types of library running schemes, including cross validation and holdout evaluation. 
   1. The following command specifies cross validation, where 'folds' means the number of folds. And it returns 'metric' which records recall(1:200), precision(1:200), ndcg(1:200), map(1:200), AUC, MPR(Mean Percentile Rank), and 'elapsed' which records training and testing time respectively. There are two rows in recall, precision, ndcg and map, the first row indicate the average value and the second row is the standard deviation of cross validation. For example, recall(1,20) is the averaged recall@20 while recall(2,20) is the standard deviation of cross validation.
   
-  [metric, elapsed] = item_recommend(@(mat) iccf(mat, 'K', 50, 'max_iter', 20), data, 'folds', 5);
+  [metric, elapsed] = item_recommend(@(mat) iccf(mat, 'K', 50, 'max_iter', 20), data, 'folds', 5); which can be rewriten as
+  [metric, elapsed] = item_recommend(@iccf, data, 'folds', 5, 'K', 50, 'max_iter', 20);
   
   There are five types of matrix split methods, by specified by 'fold_mode', whose first three options are 'un' (default) user-oriented split, 'in' item-oriented split, 'en' entry-oriented split. For example, 'un' indicates splitting each user data into 'folds' folds and aggregating the respective fold of all users together. Besides, 'u' splits users into 'folds' folds while 'i' splits items into 'folds' folds. The former one is used for cold-start user evaluation while the latter one is used for cold-start item evaluation.
 
