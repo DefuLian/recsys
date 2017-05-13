@@ -1,5 +1,5 @@
-function [itemW, Error]=APGItemLatentFactor(W, R, userW, itemW, reg_i, reg_s, item_sim, itemGroup)
-	tau0 = 1e7; tau = tau0; tK0 = 1;  
+function itemW=APGItemLatentFactor(W, R, userW, itemW, reg_i, reg_s, item_sim, itemGroup)
+	tau = 1e7; tK0 = 1;  
     itemW0 = itemW;
     LastError = eps;
     init.userCorr = userW' * userW;
@@ -7,37 +7,47 @@ function [itemW, Error]=APGItemLatentFactor(W, R, userW, itemW, reg_i, reg_s, it
     for e = 1 : 70
         tK= (1+ sqrt(1 + 4* tK0 * tK0))/2;
         X = itemW + ((tK0-1)/tK) * (itemW - itemW0); itemW0= itemW; tK0= tK;    
-        [itemW, tau, error] = APGItemLFLineSearch(W, R, userW, X, init, tau, tau0, reg_i, reg_s, item_sim, itemGroup);         
+        [itemW, tau, error] = APGItemLFLineSearch(W, R, userW, X, init, tau, reg_i, reg_s, item_sim, itemGroup);         
         CurrError=error + 0.5*reg_i*norm(itemW, 'fro')^2 + ItemGroupLassoRegError(itemW, itemGroup, reg_s);
-        deltaError=abs(CurrError - LastError)/abs(LastError);
-        if deltaError < 1e-5   
+        deltaError=(CurrError - LastError)/abs(LastError);
+        if e>1 && (deltaError>0 || abs(deltaError) < 1e-5)
             break;
         end
         LastError=CurrError;
     end
-    Error=CurrError;
 end
-function [itemW, tau, error] = APGItemLFLineSearch(W, R, userW,  X, init, tau, tau0, reg_i, reg_s, item_sim, itemGroup)
-    [M, N] = size(W);
-    eta = 0.7;
-    tau = eta * tau;
+function [itemW, tau, error] = APGItemLFLineSearch(W, R, userW,  X, init, tau, reg_i, reg_s, item_sim, itemGroup)
+    eta = 0.5;
     itemW = item_sim * X ;
-    [I, J, w] = find(W);
-    a = sum(userW(I,:) .* itemW(J, :), 2) .* w;
-    subgX = sparse(I, J, a, M, N)' * userW + itemW * init.userCorr - init.subgX; 
+    [pX, pred]= fast_loss(R, W, userW, itemW);
+    subgX = (pred .* W)' * userW + itemW * init.userCorr - init.subgX; 
     subgX = item_sim' * subgX;
     norm2= norm(subgX, 'fro');
-    pX= 0.5* fast_loss(R, W, userW, itemW);
-    for e = 1 : 10
+    for e = 1 : 50
         Z = X- (1/tau) * subgX; 
         itemW = ItemProxyOperator(Z, itemGroup, reg_i, reg_s, tau); 
         norm1= norm(itemW - Z, 'fro');
         error = 0.5 * fast_loss(R, W, userW, item_sim * itemW);
-        Qstau = 0.5 * tau * norm1^2 - 0.5/tau * norm2^2 + pX;
-        if error <= Qstau
-            break;
+        Qstau = 0.5 * tau * norm1^2 - 0.5/tau * norm2^2 + 0.5 * pX;
+        suff_decr = error <= Qstau;
+        if e == 1
+            decr_tau = suff_decr; itemW_old = X;
+        end
+        if decr_tau
+            if ~suff_decr || norm(itemW_old-itemW, 2)<eps
+                if ~suff_decr
+                    tau = tau/eta;
+                end
+                itemW = itemW_old; break
+            else
+                tau = tau * eta; itemW_old = itemW;
+            end
         else
-            tau= min(tau/eta, tau0);
+            if suff_decr
+                break;
+            else
+                tau = tau/eta; 
+            end
         end
     end
 end

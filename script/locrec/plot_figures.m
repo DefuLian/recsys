@@ -106,13 +106,13 @@ close(gcf);
 
 
 load(sprintf('~/data/checkin/%s/result_i.mat', dataset));
-a = [metric_iccf, metric_geomf, metric_graph, metric_wals];
+a = [metric_iccf, metric_piccf{1}, metric_geomf, metric_graph, metric_wals];
 
 
 figure('visible','off')
 recall = cell2mat({a.recall}');
 recall = recall(1:2:end,:)';
-linespec = {'-.x','--.',':+','-o'};
+linespec = {'-.x','-.*', '--.',':+','-o'};
 for i=1:size(recall,2)
     plot(recall(10:10:200,i), linespec{i}, 'linewidth',2); hold on
 end
@@ -122,14 +122,14 @@ set(gca, 'ytick',0:0.05:0.25)
 ylim([0,0.26])
 %set(gca, 'xtick',5:5:20);
 set(gca, 'xticklabel',0:50:200);
-legend('GeoMF++', 'GeoMF', 'GWMF', 'WRMF', 'location', 'northwest')
+legend('GeoMF++', 'GeoMF', 'GeoMF++(300)', 'GWMF', 'WRMF', 'location', 'northwest')
 print(sprintf('~/data/checkin/%s/recall_cold.pdf',dataset), '-dpdf')
 close(gcf);
 
 figure('visible','off')
 ndcg = cell2mat({a.ndcg}');
 ndcg = ndcg(1:2:end,:)';
-linespec = {'-.x','--.',':+','-o','-o'};
+linespec = {'-.x','-.*', '--.',':+','-o','-o'};
 for i=1:size(ndcg,2)
     plot(ndcg(10:10:200,i), linespec{i}, 'linewidth',2); hold on
 end
@@ -139,7 +139,7 @@ xlabel('cut-off'); ylabel('NDCG')
 set(gca, 'ytick',0.0:0.03:0.15)
 %set(gca, 'xtick',5:5:20);
 set(gca, 'xticklabel',0:50:200);
-legend('GeoMF++', 'GeoMF', 'GWMF', 'WRMF', 'location', 'northwest')
+legend('GeoMF++', 'GeoMF++(300)', 'GeoMF', 'GWMF', 'WRMF', 'location', 'northwest')
 print(sprintf('~/data/checkin/%s/ndcg_cold.pdf',dataset), '-dpdf')
 close(gcf);
 

@@ -143,6 +143,16 @@ metric_bpr = item_recommend(@identity, train, 'test', test, 'P', P, 'Q', Q);
 save('/home/dlian/data/checkin/Beijing/result.mat', 'metric_bpr', '-append');
 
 
+fileID = fopen('/home/dlian/data/checkin/Beijing/items.txt');
+items = textscan(fileID, '%f\t%f\t%f\t%s');
+fclose(fileID);
+[IDX, C]=kmeans([items{2}, items{3}], 50);
+clusterInx=+[items{1}, IDX];
+group_num = max(clusterInx(:,2));
+item_group = sparse(clusterInx(:,1)+1, clusterInx(:,2), true, N, group_num);
+
+metric_irenmf = item_recommend(@(mat) irenmf(mat, 'alpha', alpha, 'K', 150, 'item_sim', item_sim, 'itemGroup', item_group), train, 'test', test);
+
 %% training shanghai data
 
 data = readContent('/home/dlian/data/checkin/Shanghai/data.txt');
