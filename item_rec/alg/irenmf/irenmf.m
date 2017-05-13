@@ -24,9 +24,9 @@ function [U, V] = irenmf(R, varargin)
         CurrError = 0.5*fast_loss(R,W,userW, item_sim*itemW);
         deltaError=(CurrError - LastError)/abs(LastError);
         fprintf('Epoch %g, CurrError %g, LastError %g, DeltaErr %g, Time: %g\n', e, CurrError, LastError, deltaError, toc);
-        if abs(deltaError) < tol            
-            break;
-        end
+        %if abs(deltaError) < tol            
+        %    break;
+        %end
         LastError=CurrError;        
     end
     U = userW; V = item_sim * itemW;
