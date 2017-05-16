@@ -152,6 +152,7 @@ group_num = max(clusterInx(:,2));
 item_group = sparse(clusterInx(:,1)+1, clusterInx(:,2), true, N, group_num);
 
 metric_irenmf = item_recommend(@(mat) irenmf(mat, 'alpha', alpha, 'K', 150, 'item_sim', item_sim, 'itemGroup', item_group), train, 'test', test);
+metric_irenmf1 = item_recommend(@(mat) irenmf(mat, 'alpha', alpha, 'K', 150, 'item_sim', item_sim, 'itemGroup', item_group, 'max_iter', 150), train, 'test', test);
 
 %% training shanghai data
 

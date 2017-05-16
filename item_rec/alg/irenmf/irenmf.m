@@ -17,9 +17,12 @@ function [U, V] = irenmf(R, varargin)
     itemW(:, end)=1;
     LastError=0;
     item_sim = geo_alpha * spdiags(ones(N,1), 0, N, N) + (1 - geo_alpha) * item_sim;
+    Rt = R.';
+    Wt = W.';
     for e = 1 : max_iter
         tic;
-        userW= APGUserLatentFactor(W, R, userW, item_sim*itemW, reg_u);        
+        %userW= APGUserLatentFactor(W, R, userW, item_sim*itemW, reg_u);        
+        userW = Optimize(Rt, Wt, userW, item_sim*itemW, reg_u);
         itemW= APGItemLatentFactor(W, R, userW, itemW, reg_i, reg_s, item_sim, itemGroup);   
         CurrError = 0.5*fast_loss(R,W,userW, item_sim*itemW);
         deltaError=(CurrError - LastError)/abs(LastError);
@@ -37,3 +40,26 @@ function [U, V] = irenmf(R, varargin)
     fprintf('item latent factors density:%g\n', density);
 
 end
+
+
+function U = Optimize(R, W, U, V, reg)
+[M, K] = size(U);
+Vt = V.';
+VtV = Vt * V + reg * eye(K);
+for i = 1 : M
+    w = W(:, i);
+    r = R(:, i);
+    Ind = w>0;
+    if nnz(w) == 0
+        Wi = zeros(0);
+    else
+        Wi = diag(w(Ind));
+    end
+    sub_V = V(Ind,:);
+    VCV = sub_V.' * Wi * sub_V + VtV; %Vt_minus_V = sub_V.' * (Wi .* sub_V) + invariant;
+    Y = Vt * (w .* r + r);
+    u = VCV \ Y;
+    U(i,:) = u;
+end
+end
+

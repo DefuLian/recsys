@@ -4,11 +4,11 @@ function itemW=APGItemLatentFactor(W, R, userW, itemW, reg_i, reg_s, item_sim, i
     LastError = eps;
     init.userCorr = userW' * userW;
     init.subgX = (W .* R + R)' * userW;
-    for e = 1 : 70
+    for e = 1 : (150*2)
         tK= (1+ sqrt(1 + 4* tK0 * tK0))/2;
         X = itemW + ((tK0-1)/tK) * (itemW - itemW0); itemW0= itemW; tK0= tK;    
-        [itemW, tau, error] = APGItemLFLineSearch(W, R, userW, X, init, tau, reg_i, reg_s, item_sim, itemGroup);         
-        CurrError=error + 0.5*reg_i*norm(itemW, 'fro')^2 + ItemGroupLassoRegError(itemW, itemGroup, reg_s);
+        [itemW, tau, CurrError] = APGItemLFLineSearch(W, R, userW, X, init, tau, reg_i, reg_s, item_sim, itemGroup);         
+        %CurrError=error + 0.5*reg_i*norm(itemW, 'fro')^2 + ItemGroupLassoRegError(itemW, itemGroup, reg_s);
         deltaError=(CurrError - LastError)/abs(LastError);
         if e>1 && (deltaError>0 || abs(deltaError) < 1e-5)
             break;
@@ -25,7 +25,8 @@ function [itemW, tau, error] = APGItemLFLineSearch(W, R, userW,  X, init, tau, r
     norm2= norm(subgX, 'fro');
     for e = 1 : 50
         Z = X- (1/tau) * subgX; 
-        itemW = ItemProxyOperator(Z, itemGroup, reg_i, reg_s, tau); 
+        itemW=(tau/(tau + reg_i))*Z;
+        %itemW = ItemProxyOperator(Z, itemGroup, reg_i, reg_s, tau); 
         norm1= norm(itemW - Z, 'fro');
         error = 0.5 * fast_loss(R, W, userW, item_sim * itemW);
         Qstau = 0.5 * tau * norm1^2 - 0.5/tau * norm2^2 + 0.5 * pX;
