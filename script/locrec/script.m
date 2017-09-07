@@ -1,5 +1,5 @@
 %%
-[train, test] = readData('/home/dlian/data/subcheckin/',1);
+[train, test] = readData('/home/dlian/data/checkin/Beijing/',1);
 [U,V] = piccf(train>0, 'max_iter',10);
 [U1,V1] = iccf(train>0, 'max_iter',10);
 %%
@@ -152,8 +152,16 @@ group_num = max(clusterInx(:,2));
 item_group = sparse(clusterInx(:,1)+1, clusterInx(:,2), true, N, group_num);
 
 metric_irenmf = item_recommend(@(mat) irenmf(mat, 'alpha', alpha, 'K', 150, 'item_sim', item_sim, 'itemGroup', item_group), train, 'test', test);
-metric_irenmf1 = item_recommend(@(mat) irenmf(mat, 'alpha', alpha, 'K', 150, 'item_sim', item_sim, 'itemGroup', item_group, 'max_iter', 150), train, 'test', test);
+tic
+metric_irenmf0 = item_recommend(@(mat) irenmf(mat, 'alpha', alpha, 'K', 150, 'item_sim', item_sim, 'itemGroup', item_group, 'reg_i', 0.015*0.1), train, 'test', test);
+metric_irenmf1 = item_recommend(@(mat) irenmf(mat, 'alpha', alpha, 'K', 150, 'item_sim', item_sim, 'itemGroup', item_group, 'reg_i', 0.015*10), train, 'test', test);
+metric_irenmf2 = item_recommend(@(mat) irenmf(mat, 'alpha', alpha, 'K', 150, 'item_sim', item_sim, 'itemGroup', item_group, 'reg_i', 0.015*100), train, 'test', test);
+toc
 
+save('/home/dlian/data/checkin/Beijing/result.mat', 'metric_irenmf', '-append');
+save('/home/dlian/data/checkin/Beijing/result.mat', 'metric_irenmf0', '-append');
+save('/home/dlian/data/checkin/Beijing/result.mat', 'metric_irenmf1', '-append');
+save('/home/dlian/data/checkin/Beijing/result.mat', 'metric_irenmf2', '-append');
 %% training shanghai data
 
 data = readContent('/home/dlian/data/checkin/Shanghai/data.txt');
@@ -320,6 +328,16 @@ Q = [Q,b];
 metric_bpr = item_recommend(@identity, train, 'test', test, 'P', P, 'Q', Q);
 save('/home/dlian/data/checkin/Gowalla/iccf.result.mat', 'metric_bpr', '-append');
 
+
+fileID = fopen('/home/dlian/data/checkin/Gowalla/items.txt');
+items = textscan(fileID, '%f\t%f\t%f\t%s');
+fclose(fileID);
+[IDX, C]=kmeans([items{2}, items{3}], 50);
+clusterInx=+[items{1}, IDX];
+group_num = max(clusterInx(:,2));
+item_group = sparse(clusterInx(:,1)+1, clusterInx(:,2), true, N, group_num);
+[metric_irenmf,time] = item_recommend(@(mat) irenmf(mat, 'alpha', alpha, 'K', 150, 'item_sim', item_sim, 'itemGroup', item_group), train, 'test', test);
+save('/home/dlian/data/checkin/Gowalla/iccf.result.mat', 'metric_irenmf', '-append');
 %% 
 P = randn(N, 50);
 X = item_grid;

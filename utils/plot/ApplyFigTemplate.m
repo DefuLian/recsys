@@ -1,8 +1,11 @@
-function ApplyFigTemplate(fig, ax )
+function ApplyFigTemplate(fig, ax, ratio )
+    if nargin ==2
+        ratio = 0.8;
+    end
     set(fig,'PaperUnits','inches');
     %pos = get(fig,'paperposition');
     %set(fig, 'papersize', [(pos(3)-pos(1))*0.75, (pos(4)-pos(2))*0.75]);
-    width = 4.5; height = width*0.8;
+    width = 4.5; height = width*ratio;
     %width = 3.8; height = width*0.8;
     set(fig,'papersize',[width,height]);
     set(fig, 'paperposition', [0,0,width,height]);

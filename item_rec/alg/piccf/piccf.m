@@ -49,7 +49,7 @@ for iter=1:max_iter
         V = OptimizeUU(Y, Q, V, reg_if);
         Q = [Q(:,1:K), bias_N, Q(:,K+1)];
     end
-    fprintf('Iteration=%d of all optimization, loss=%f', iter, fast_loss(R, W, P, Q, usr_w, item_w));
+    fprintf('Iteration=%d of parallel iccf, loss=%f', iter, fast_loss(R, W, P, Q, usr_w, item_w));
     if mod(iter, k_verbose) ==0 && (~isempty(test))
         [prec, recall] = Evaluate(R, test, P, Q);
         fprintf(',recall@%d=%f', pos_eval, recall(pos_eval));

@@ -62,14 +62,17 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 			numer += w[i] * (e(i) * q(i, k) + p[k]* q(i, k) * q(i, k));
 
 		}
-		numer += au * dr[k];
-		for (size_t kk = 0; kk < K; ++kk){
-			if (kk != k){
-				numer -= au * p[kk] * qs(kk, k);
+		numer += x[k];
+		if (au > 1e-10)
+		{
+			numer += au * dr[k];
+			for (size_t kk = 0; kk < K; ++kk){
+				if (kk != k){
+					numer -= au * p[kk] * qs(kk, k);
+				}
 			}
+		    numer -= au * bR[k];
 		}
-        numer += x[k];
-        numer -= au * bR[k];
 		double dom = au * qs(k, k) + reg;
 
 		for (size_t i = start_row_index; i < end_row_index; ++i)

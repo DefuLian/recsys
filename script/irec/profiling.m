@@ -1,0 +1,1 @@
+metric = item_recommend(@(mat) spicf(mat, 'alpha', alpha, 'K', K, 'max_iter', 2), +(train>0), 'test', test);
