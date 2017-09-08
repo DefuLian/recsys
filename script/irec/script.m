@@ -10,9 +10,9 @@ metric20 = item_recommend(@(mat) piccf(mat, 'alpha', alpha, 'K', K, 'max_iter', 
 metric30 = item_recommend(@(mat) piccf(mat, 'alpha', alpha, 'K', K, 'max_iter', 30), +(train>0), 'test', test);
 
 
-[P, Q] = spicf(+(train>0), 'alpha', alpha, 'K', K, 'max_iter', 10,'test', test, 'reg_u', 50, 'reg_i', 50);
+[train, test] = readData('/home/dlian/data/checkin/Beijing/',1);
+[~, ~, ~, ~, metric] = piccf(+(train>0), 'alpha', 30, 'test', test, 'pos_eval', 50);
 
-for i=1:10
-    load(sprintf('pq%d.mat',i))
-    display([max(Q(:)),min(Q(:)), max(P(:)),min(P(:))])
-end
+train_neg = sample_negative(+(train>0)');
+mean(sum(train_neg,2))
+[P, Q] = splicf(train_neg, 'test', test);

@@ -51,16 +51,18 @@ for iter=1:max_iter
     end
     fprintf('Iteration=%d of parallel iccf, loss=%f', iter, fast_loss(R, W, P, Q, usr_w, item_w));
     if mod(iter, k_verbose) ==0 && (~isempty(test))
-        [prec, recall] = Evaluate(R, test, P, Q);
-        fprintf(',recall@%d=%f', pos_eval, recall(pos_eval));
+        %[prec, recall] = Evaluate(R, test, P, Q);
+        eval = evaluate_item(R, test, P, Q, -1, 200);
+        fprintf(',recall@%d=%f, ndcg@%d=%f, auc=%f', pos_eval, eval.recall(pos_eval),pos_eval, eval.ndcg(pos_eval), full(eval.auc));
     end
     fprintf('\n');
 end
 if(~isempty(test))
     if mod(max_iter, k_verbose)~=0
-        [prec, recall] = Evaluate(R, test, P, Q);
+        %[prec, recall] = Evaluate(R, test, P, Q);
+        eval = evaluate_item(R, test, P, Q, 200, 200);
     end
-    metric = struct('prec', prec, 'recall', recall);
+    metric = struct('prec', eval.prec, 'recall', eval.recall);
 end
 end
 
