@@ -22,17 +22,22 @@ function [B, D, B1, D1, P, Q, U, V] = DCMF_fast(train, X, Y, r, varargin)
 %     .debug -- check loss function
 % Written by Rui Liu
 % initialization
-R = scale_matrix(train, r);
-RT = R.';
+
+
 
 f = size(X, 2);
 l = size(Y, 2);
 
-[maxItr, maxItr2, debug, B0, D0, P0, Q0, U0, V0, alpha, lambda, beta, eta, test] = ...
+[maxItr, maxItr2, debug, B0, D0, P0, Q0, U0, V0, alpha, lambda, beta, eta, test, is_classifier] = ...
    process_options(varargin, 'maxItr', 30, 'maxItr2', 5, ...
                    'debug', true, 'B0', [], 'D0',[], ...
                    'P0', [], 'Q0', [], 'U0', [], 'V0',[], 'alpha',[0.01,0.01],...
-                   'lambda',[0, 0], 'beta',0, 'eta', [0 0], 'test', []);
+                   'lambda',[0, 0], 'beta',0, 'eta', [0 0], 'test', [], 'is_classifier', false);
+
+if ~is_classifier
+    R = scale_matrix(train, r);
+end
+RT = R.';
 gamma = (lambda+eta) + 1e-10;
                
 if isempty(B0) || isempty(D0) ||isempty(P0) ||isempty(Q0) ||(size(U0,1)>0 && isempty(U0)) || (size(V0,1)>0 && isempty(V0))
@@ -56,10 +61,20 @@ V = V0;
 while ~converge
     BB = B+0; DD = D+0;
     XX = alpha(1) * P + eta(1)* X * U;
-    B = dcmf_all_mex(RT, D, B, XX, [], maxItr2, false);%D.'* D * beta;
+    if beta >0
+        Ds = D.'* D * beta;
+    else
+        Ds = [];
+    end
+    B = dcmf_all_mex(RT, D, B, XX, Ds, maxItr2, is_classifier);
     
     YY = alpha(2) * Q + eta(2) * Y * V;
-    D = dcmf_all_mex(R, B, D, YY, [], maxItr2, false);% B.'*B * beta;
+    if beta>0
+        Bs = B.'*B * beta;
+    else
+        Bs = [];
+    end
+    D = dcmf_all_mex(R, B, D, YY, Bs, maxItr2, is_classifier);
     
     P = UpdateSVD((B + lambda(1)/alpha(1)*X*U)')';
     Q = UpdateSVD((D + lambda(2)/alpha(2)*Y*V)')';

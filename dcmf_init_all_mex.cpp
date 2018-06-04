@@ -31,7 +31,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
 	mwIndex *Ir, *Jc;
 	double *R, *Q, *P, *X, *E, *Qs;
-	double alpha, beta, maxItr;
+	double alpha, maxItr;
 	mwSize M, N, KK;
 	
 	Ir = mxGetIr(prhs[0]);
@@ -98,13 +98,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 				
 				ss += x(u,k);
 				
-				if(beta > 1e-10){
+				if(isreg){
 					for (mwSize k1 = 0; k1 < KK; ++k1){
 						if (k1 != k){
-							ss -=  beta * p(u,k1) * qs(k1, k);
+							ss -=  p(u,k1) * qs(k1, k);
 						}
 					}
-					dom += beta * qs(k, k);
+					dom += qs(k, k);
 				}
 				
 				

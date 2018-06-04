@@ -1,9 +1,10 @@
 function [G,H,U,V,P,Q] = DCMFinit_fast(R,X,Y,r,varargin)
 
-[maxItr, debug, alpha, lambda, beta, eta, test] = ...
+[maxItr, debug, alpha, lambda, beta, eta, test, is_classifier] = ...
    process_options(varargin, 'maxItr', 30, ...
                    'debug', true, 'alpha',0.01*[1,1],...
-                   'lambda',[0, 0], 'beta',0, 'eta',[0.01 1], 'test', []);
+                   'lambda',[0, 0], 'beta',0, 'eta',[0.01 1], 'test', [], 'is_classifier',false);
+               
 gamma = (lambda+eta)+1e-10;
                
 RT = R.';
@@ -30,12 +31,20 @@ while ~converge
     P0 = P;
     Q0 = Q;
     XX = alpha(1) * P + eta(1)* X * U;
-    %G = dcmf_init_all_mex(RT, H, G, XX, H.'* H * beta, 1, alpha, false);
-    G = dcmf_init_all_mex(RT, H, G, XX, [], 1, alpha(1)+eta(1), false);
+    if beta>0
+        Hs = H.'* H * beta;
+    else
+        Hs = [];
+    end
+    G = dcmf_init_all_mex(RT, H, G, XX, Hs, 1, alpha(1)+eta(1), is_classifier);
     
     YY = alpha(2) * Q + eta(2) * Y * V;
-    %H = dcmf_init_all_mex(R, G, H, YY, G.'* G * beta, 1, alpha, false);
-    H = dcmf_init_all_mex(R, G, H, YY, [], 1, alpha(2)+eta(2), false);
+    if beta>0
+        Gs = G.'* G * beta;
+    else
+        Gs = [];
+    end
+    H = dcmf_init_all_mex(R, G, H, YY, Gs, 1, alpha(2)+eta(2), is_classifier);
     
     P = UpdateSVD((G + lambda(1)/alpha(1)*X*U)')';
     Q = UpdateSVD((H + lambda(2)/alpha(2)*Y*V)')';
