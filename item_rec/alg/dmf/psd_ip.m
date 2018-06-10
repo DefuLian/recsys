@@ -1,6 +1,6 @@
 function [phi, X, y] = psd_ip(L, varargin)
 % solves: max trace(LX) s.t. X psd, diag(X) = b; b = ones(n,1)/4
-% min b’y s.t. Diag(y) - L psd, y unconstrained,
+% min b'y s.t. Diag(y) - L psd, y unconstrained,
 % input: L ... symmetric matrix
 % output: phi ... optimal value of primal, phi =trace(LX)
 % X ... optimal primal matrix
