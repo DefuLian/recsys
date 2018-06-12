@@ -31,7 +31,9 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[]) {
             for (i = 0; i < r; i ++)
                 if (i != k)
                     ss += MM[k+i*r]*b[i];
+            /*mexPrintf("%d,%f",k,ss);*/
             ss -= Ms[k]+x[k];
+            /*mexPrintf(",%f,%f,%f,%f\n",ss, Ms[k], x[k], Ms[k]+ x[k]);*/
             if (ss > 0){
                 if (b[k] == -1)
                     no_change_count ++;
@@ -51,5 +53,6 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[]) {
             converge = true;
         it ++;
     }
+    mexPrintf("\n");
 }
     

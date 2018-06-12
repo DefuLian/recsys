@@ -1,30 +1,29 @@
-function [x, l] = bqp(x_init, A, b, alg)
+function [x, l] = bqp(x_init, A, b, varargin)
+[max_iter, bsize, alg] = process_options(varargin, 'max_iter', 500,'block_size', 32, 'alg', 'bcd');
 k = size(A,1);
 assert(issymmetric(A), 'matrix A should be sysmmetric');
 if strcmpi(alg, 'ccd')
-    [x, l] = ccd(x_init, A, b);
+    [x, l] = ccd(x_init, A, b, max_iter);
 elseif strcmpi(alg, 'svr')
+    [x,l] = bqp_small(A, b);
+elseif strcmpi(alg, 'bcd')
     if k > 32
-        [x,l] = bqp_large(x_init, A, b, 32);
+        [x,l] = bqp_large(x_init, A, b, bsize, max_iter);
     else
-        [x,l] = bqp_small(A, b);
+        error('the dimension is small, please use "svr"');
     end
 elseif strcmpi(alg, 'mix')
-    [x, l] = bqp_mix(x_init, A, b, 32);
+    [x, l] = bqp_mix(x_init, A, b, bsize, max_iter);
 else
     error('unsupported solver');
 end
 
 end
 %%% bqp_mix alternatively use ccd and bcd for optimization.
-function [x,l] = bqp_mix(x_init, A, b, bsize, max_iter)
+function [x,l] = bqp_mix(x, A, b, bsize, max_iter)
 k = size(A,1);
 convergent = false;
-if nargin < 5
-    max_iter = 500;
-end
 iter = 1;
-x = x_init;
 while ~convergent
     [x1, ~] = bqp_large(x, A, b, bsize, 1);
     [x2, l] = ccd(x1, A, b, 1);
@@ -38,15 +37,11 @@ end
 end
 %%% bqp_large use block coodinate descent for optimziation
 %%% parameter bsize: specifies the size of block
-function [x,l] = bqp_large(x_init, A, b, bsize, max_iter)
+function [x,l] = bqp_large(x, A, b, bsize, max_iter)
 k = size(A,1);
 bnum = (k + bsize - 1) / bsize; %% number of blocks
-x = x_init;
 dim_index = randperm(k);
 convergent = false;
-if nargin < 5
-    max_iter = 500;
-end
 iter = 1;
 while(~convergent)
     no_change_count = 0;
@@ -55,7 +50,7 @@ while(~convergent)
         bend = min(biter * bsize, k);
         index = false(k,1); index(dim_index(bstart:bend)) = true;
         x_new = bqp_small(A(index, index), b(index) - A(index, ~index) * x(~index));
-        no_change_count = no_change_count + sum(x(index) == x_new);
+        no_change_count = no_change_count + sum(x(index) == x_new.');
         x(index) = x_new;
     end
     if iter >= max_iter || no_change_count == k
@@ -79,7 +74,7 @@ x = Xi(ind,:);
 t = x(k+1);
 x = x(1:k) * t;
 end
-function [x,l] = ccd(x, A, b)
-x = ccd_mex(x, A, b);
+function [x,l] = ccd(x, A, b, max_iter)
+x = ccd_bqp_mex(x, A, b, max_iter);
 l = dot(x, A*x) - 2* dot(b, x);
 end

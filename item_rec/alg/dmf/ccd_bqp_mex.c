@@ -1,8 +1,8 @@
 #include <string.h>
 #include <math.h>
 #include <mex.h>
-// using cyclic coordinate descent for optimizing
-// binary quadratic problem: min x' A x - 2 b' x, s.t. x in {+1,-1}^k
+/* using cyclic coordinate descent for optimizing */
+/* binary quadratic problem: min x' A x - 2 b' x, s.t. x in {+1,-1}^k */
 void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[]) {
     double *x;/*variable of size r x 1*/
     double *A;/*coefficient matrix of size r x r */
@@ -36,7 +36,7 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[]) {
     
     plhs[0] = mxCreateDoubleMatrix(r, 1, mxREAL);
 	double *x_new = mxGetPr(plhs[0]);
-    
+    memcpy(x_new, x, r * sizeof(double));
     it = 0;
     
     while (!converge){
@@ -45,20 +45,23 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[]) {
             ss = 0;
             for (i = 0; i < r; i ++)
                 if (i != k)
-                    ss += A[k+i*r]*x[i];
+                    ss += A[k+i*r]*x_new[i];
+            /*mexPrintf("%d,%f,",k,ss);*/
             ss -= b[k];
+            /*mexPrintf("%f,%f\n", ss, b[k]);*/
             if (ss > 0){
-                x_new[k] = -1;
-                if (x[k] == -1)
+                if (x_new[k] == -1)
                     no_change_count ++;
+                else
+                    x_new[k] = -1;
             }
             else if (ss < 0){
-                x_new[k] = 1
-                if (x[k] == 1)
+                if (x_new[k] == 1)
                     no_change_count ++;
+                else
+                    x_new[k] = 1;
             }
             else{
-                x_new[k] = x[k];
                 no_change_count ++;
             }
         }

@@ -7,7 +7,7 @@
 #define q(i, k) Q[(i) + (k) * N]
 #define x(u, k) X[(u) + (k) * M]
 #define qs(k1, k2) Qs[(k1) + (k2) * KK]
-#define lambda(eps) tanh((eps)/2)/(eps)/4
+#define lambda(eps) tanh((eps)/2)/(eps+1e-16)/4
 #define err_r(r, p) (r - p)
 #define err_c(r, p) ((r)/4 - lambda(p) * (p))
 #define pred(index) V[(index) - start_row_index] 
@@ -105,13 +105,15 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 						}
 					}
 				}
-				
-				double p_new = 0;
-			
-				if(ss > 0)
-					p_new = 1;
-				else if(ss < 0)
-					p_new = -1;
+				//if (u==840)
+                //    mexPrintf("%f,",ss);
+				double p_new = p(u,k);
+                
+                if(fabs(ss)>1e-10)
+                    if(ss > 0)
+                        p_new = 1;
+                    else if(ss < 0)
+                        p_new = -1;
 					
 				
 				if(fabs(p_new - p(u,k)) > 1e-10) //have changes
@@ -129,7 +131,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 				
 				
 			}
-			
+            //if (u==840)
+            //    mexPrintf("\n");
 			if ((it >= (int)maxItr-1) || (no_change_count == KK))
 				converge = true;
 			it ++;
