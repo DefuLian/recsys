@@ -14,12 +14,12 @@ function [B, D] = dmf(R, varargin)
 %%% alpha regularization coefficient for balanced condition
 %%% beta  regularization coefficient for decorrelation condition
 [m, n]=size(R);
-[k, max_iter, debug, islogit, alpha, beta, rho, alg] = process_options(varargin, 'K', 64, 'max_iter', 10, 'debug', true, ...
-    'islogit', false, 'alpha',0.01, 'beta', 0.01, 'rho', 0.01, 'alg', 'ccd');
+[k, max_iter, debug, islogit, alpha, beta, rho, alg, bsize] = process_options(varargin, 'K', 64, 'max_iter', 10, 'debug', true, ...
+    'islogit', false, 'alpha',0.01, 'beta', 0.01, 'rho', 0.01, 'alg', 'ccd','blocksize',32);
 if ~islogit
     R = scale_matrix(R, k);
 end
-rng(10)
+rng(10);
 B = +(randn(m,k)>0); D = +(randn(n,k)>0);
 B = B*2-1; D=D*2-1;
 Rt = R.';
@@ -28,9 +28,13 @@ opt.alpha = alpha;
 opt.beta = beta;
 opt.islogit = islogit;
 opt.alg = alg;
+opt.bsize = bsize;
 for iter=1:max_iter
     P_b = B-repmat(mean(B),m,1); P_d = sqrt(m) * proj_stiefel_manifold(B);
     Q_b = D-repmat(mean(D),n,1); Q_d = sqrt(n) * proj_stiefel_manifold(D);
+    loss = loss_(R, B, D, opt) + opt.alpha * (norm(B-P_b,'fro')^2 + norm(D-Q_b,'fro')^2) ...
+        + opt.beta*(norm(B-P_d,'fro')^2 +norm(D-Q_d,'fro')^2);
+    fprintf('Iteration=%3d of all optimization, loss=%10.3f\n', iter-1, loss);
     DtD = D'*D;
     B = optimize(Rt, D, B, DtD, P_b, P_d, opt);
     %XX = opt.alpha*P_b + opt.beta*P_d;
@@ -39,16 +43,18 @@ for iter=1:max_iter
     D = optimize(R,  B, D, BtB, Q_b, Q_d, opt);
     %YY = opt.alpha*P_b + opt.beta*P_d;
     %D = dcmf_all_mex(R, B, D, YY, BtB*opt.rho, 100, islogit);
+end
+    P_b = B-repmat(mean(B),m,1); P_d = sqrt(m) * proj_stiefel_manifold(B);
+    Q_b = D-repmat(mean(D),n,1); Q_d = sqrt(n) * proj_stiefel_manifold(D);
     loss = loss_(R, B, D, opt) + opt.alpha * (norm(B-P_b,'fro')^2 + norm(D-Q_b,'fro')^2) ...
         + opt.beta*(norm(B-P_d,'fro')^2 +norm(D-Q_d,'fro')^2);
     fprintf('Iteration=%3d of all optimization, loss=%10.3f\n', iter, loss);
-end
 end
 
 function B = optimize(Rt, D, B, DtD, P_b, P_d, opt)
 max_iter = 1;
 m = size(Rt, 2);
-lambda = @(x) tanh((x)/2)./(x+1e-16)./4;
+lambda = @(x) tanh((abs(x)+1e-16)/2)./(abs(x)+1e-16)./4;
 X = opt.alpha*P_b + opt.beta*P_d;
 for u=1:m
     %fprintf('%d,',u);
@@ -58,17 +64,22 @@ for u=1:m
     Du = D(idx, :);
     if ~opt.islogit
         H = opt.rho * DtD + (1 - opt.rho) * (Du.' * Du);
+        %H = opt.rho * DtD + (Du.' * Du);
         f = Du.' * r(idx) + X(u,:).';
-        B(u,:) = bqp(b, (H+H')/2, f, 'alg', opt.alg, 'max_iter',max_iter);
+        B(u,:) = bqp(b.', (H+H')/2, f, 'alg', opt.alg, 'max_iter',max_iter, 'blocksize', opt.bsize);
+        %r_ = Du * b.';
+        %B(u,:) = ccd_logit_mex(r(idx), Du, b, [], X(u,:), r_, opt.islogit, max_iter);
     else
         if ~strcmpi(opt.alg,'ccd')
             r_ = Du * b.';
             H = opt.rho * DtD + Du.' * diag(lambda(r_) - opt.rho) * Du;
+            %H = opt.rho * DtD + Du.' * diag(lambda(r_)) * Du;
             f = 1/4 * Du.' * r(idx) + X(u,:).';
-            B(u,:) = bqp(b, (H+H')/2, f, 'alg', opt.alg, 'max_iter',max_iter);
+            B(u,:) = bqp(b, (H+H')/2, f, 'alg', opt.alg, 'max_iter',max_iter, 'blocksize', opt.bsize);
         else
             r_ = Du * b.';
             B(u,:) = ccd_logit_mex(r(idx), Du, b, opt.rho * (DtD - Du'*Du), X(u,:), r_, opt.islogit, max_iter);
+            %B(u,:) = ccd_logit_mex(r(idx), Du, b, opt.rho * DtD, X(u,:), r_, opt.islogit, max_iter);
         end
     end
 end

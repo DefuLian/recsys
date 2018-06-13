@@ -109,14 +109,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                 //    mexPrintf("%f,",ss);
 				double p_new = p(u,k);
                 
-                if(fabs(ss)>1e-10)
+                if(fabs(ss)>1e-6)
                     if(ss > 0)
                         p_new = 1;
                     else if(ss < 0)
                         p_new = -1;
 					
 				
-				if(fabs(p_new - p(u,k)) > 1e-10) //have changes
+				if(fabs(p_new - p(u,k)) > 1e-6) //have changes
 				{
 					for(mwSize item_index = start_row_index; item_index < end_row_index; ++item_index)
 					{

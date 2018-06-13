@@ -1,5 +1,5 @@
 function [x, l] = bqp(x_init, A, b, varargin)
-[max_iter, bsize, alg] = process_options(varargin, 'max_iter', 500,'block_size', 32, 'alg', 'bcd');
+[max_iter, bsize, alg] = process_options(varargin, 'max_iter', 500,'blocksize', 32, 'alg', 'bcd');
 k = size(A,1);
 assert(issymmetric(A), 'matrix A should be sysmmetric');
 if strcmpi(alg, 'ccd')

@@ -1,6 +1,6 @@
 #define err_r(r, p) (r - p)
 #define err_c(r, p) ((r)/4 - lambda(p) * (p))
-#define lambda(eps) tanh((eps)/2)/(eps+1e-16)/4
+#define lambda(eps) tanh((fabs(eps)+1e-16)/2)/(fabs(eps)+1e-16)/4
 #define d(i,f) Du[(i)+n*(f)]
 #include <string.h>
 #include <math.h>
@@ -50,13 +50,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             }
             //mexPrintf("%f,", ss);
             double bb = b[f];
-            if(fabs(ss)>1e-10)
+            if(fabs(ss)>1e-6)
                 if(ss>0)
                     bb = 1;
                 else if(ss<0)
                     bb = -1;
             
-            if(fabs(bb-b[f])>1e-10)
+            if(fabs(bb-b[f])>1e-6)
             {
                 for(mwSize i=0; i<n; ++i){
                     r_[i] = r_[i] + (bb - b[f])*d(i,f);
