@@ -66,6 +66,7 @@ end
 function B = optimize_real(Rt, D, B, DtD, P_b, P_d, opt)
 max_iter = 1;
 m = size(Rt, 2);
+lambda = @(x) tanh((abs(x)+1e-16)/2)./(abs(x)+1e-16)./4;
 X = opt.alpha*P_b + opt.beta*P_d;
 for u=1:m
     b = B(u,:);
@@ -73,11 +74,19 @@ for u=1:m
     idx = r ~= 0;
     Du = D(idx, :);
     r_ = Du * b.';
-    %if u~=252
-        B(u,:) = ccd_logit_mex(full(r(idx)), Du, b, [], X(u,:), r_, opt.islogit, max_iter, opt.alpha+opt.beta+1e-3);
-    %else
-    %    B(u,:) = ccd_logit_debug(full(r(idx)), Du, b, opt.rho * (DtD - Du'*Du), X(u,:), r_, opt.islogit, max_iter, opt.alpha+opt.beta+1e-3);
-    %end
+    if ~strcmpi(opt.alg,'ccd')
+        if ~opt.islogit
+            H = opt.rho * DtD + (1 - opt.rho)*(Du.' * Du) + 0.001*diag(ones(length(b),1));
+            f = Du.' * r(idx) + X(u,:).';
+        else
+            H = opt.rho * DtD + Du.' * diag(lambda(r_) - opt.rho) * Du + 0.001*diag(ones(length(b),1));
+            f = 1/4 * Du.' * r(idx) + X(u,:).';
+        end
+        B(u,:) = H\f;
+    else
+        B(u,:) = ccd_logit_mex(full(r(idx)), Du, b,  opt.rho * (DtD - Du'*Du), X(u,:), r_, opt.islogit, max_iter, opt.alpha+opt.beta+1e-3);
+    end
+   
 end
 end
 function B = optimize_binary(Rt, D, B, DtD, P_b, P_d, opt)
@@ -137,9 +146,16 @@ function val = loss_(R, P, Q, opt)
 [I,J,r] = find(R);
 r_ = sum(P(I,:) .* Q(J,:), 2);
 if opt.islogit
-    val = sum(log(1+exp(-r .* r_))) - opt.rho * sum(r_.^2);
+    val = sum(logitloss(r .* r_)) - opt.rho * sum(r_.^2);
 else
     val = sum((r - r_).^2) - opt.rho * sum(r_.^2);
 end
 val = val + opt.rho*sum(sum((P'*P) .* (Q'*Q)));
+end
+function v = logitloss(v)
+if v>-500
+    v = log(1+exp(-v));
+else
+    v = -v;
+end
 end
