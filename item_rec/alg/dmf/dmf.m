@@ -106,7 +106,7 @@ for u=1:m
         f = Du.' * r(idx) + X(u,:).';
         B(u,:) = bqp(b.', (H+H')/2, f, 'alg', opt.alg, 'max_iter',max_iter, 'blocksize', opt.bsize);
         %r_ = Du * b.';
-        %B(u,:) = ccd_logit_mex(r(idx), Du, b, [], X(u,:), r_, opt.islogit, max_iter);
+        %B(u,:) = ccd_logit_mex(r(idx), Du, b, opt.rho * (DtD - Du'*Du), X(u,:), r_, opt.islogit, max_iter);
     else
         if ~strcmpi(opt.alg,'ccd')
             r_ = Du * b.';

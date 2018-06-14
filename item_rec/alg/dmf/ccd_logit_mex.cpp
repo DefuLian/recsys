@@ -51,7 +51,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                 }
             //mexPrintf("%.0f %.0f,", ss, dom);
             
-            ss += x[k];
+            ss += x[f];
             //mexPrintf("%f,", ss);
             if(isreg){
                 for(mwSize f1=0;f1<k;++f1)
