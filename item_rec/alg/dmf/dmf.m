@@ -14,14 +14,16 @@ function [B, D] = dmf(R, varargin)
 %%% alpha regularization coefficient for balanced condition
 %%% beta  regularization coefficient for decorrelation condition
 [m, n]=size(R);
-[k, max_iter, debug, islogit, alpha, beta, rho, alg, bsize] = process_options(varargin, 'K', 64, 'max_iter', 10, 'debug', true, ...
-    'islogit', false, 'alpha',0.01, 'beta', 0.01, 'rho', 0.01, 'alg', 'ccd','blocksize',32);
-if ~islogit
+[k, max_iter, debug, islogit, alpha, beta, rho, alg, bsize, init] = process_options(varargin, 'K', 64, 'max_iter', 10, 'debug', true, ...
+    'islogit', false, 'alpha',0.01, 'beta', 0.01, 'rho', 0.01, 'alg', 'ccd','blocksize',32, 'init', false);
+if ~islogit && ~init
     R = scale_matrix(R, k);
 end
 rng(10);
-B = +(randn(m,k)>0); D = +(randn(n,k)>0);
-B = B*2-1; D=D*2-1;
+B = randn(m,k)*0.1; D = randn(n,k)*0.1;
+if ~init
+    B = 2*(B>0)-1; D = 2*(D>0)-1;
+end
 Rt = R.';
 opt.rho = rho;
 opt.alpha = alpha;
@@ -29,6 +31,7 @@ opt.beta = beta;
 opt.islogit = islogit;
 opt.alg = alg;
 opt.bsize = bsize;
+opt.init = init;
 for iter=1:max_iter
     P_b = B-repmat(mean(B),m,1); P_d = sqrt(m) * proj_stiefel_manifold(B);
     Q_b = D-repmat(mean(D),n,1); Q_d = sqrt(n) * proj_stiefel_manifold(D);
@@ -36,9 +39,10 @@ for iter=1:max_iter
         + opt.beta*(norm(B-P_d,'fro')^2 +norm(D-Q_d,'fro')^2);
     fprintf('Iteration=%3d of all optimization, loss=%10.3f\n', iter-1, loss);
     DtD = D'*D;
-    B = optimize(Rt, D, B, DtD, P_b, P_d, opt);
-    %XX = opt.alpha*P_b + opt.beta*P_d;
+    B1 = optimize(Rt, D, B, DtD, P_b, P_d, opt);
+    XX = opt.alpha*P_b + opt.beta*P_d;
     %B2 = dcmf_all_mex(Rt, D, B, XX, DtD*opt.rho, 1, islogit);
+    B2 = dcmf_init_all_mex(Rt, D, B, XX, DtD*opt.rho, 1, opt.alpha+opt.beta+1e-10, opt.islogit);
     BtB = B'*B;
     D = optimize(R,  B, D, BtB, Q_b, Q_d, opt);
     %YY = opt.alpha*P_b + opt.beta*P_d;
@@ -52,6 +56,26 @@ end
 end
 
 function B = optimize(Rt, D, B, DtD, P_b, P_d, opt)
+if opt.init
+    B = optimize_real(Rt, D, B, DtD, P_b, P_d, opt);
+else
+    B = optimize_binary(Rt, D, B, DtD, P_b, P_d, opt);
+end
+end
+function B = optimize_real(Rt, D, B, DtD, P_b, P_d, opt)
+max_iter = 1;
+m = size(Rt, 2);
+X = opt.alpha*P_b + opt.beta*P_d;
+for u=1:m
+    b = B(u,:);
+    r = Rt(:,u);
+    idx = r ~= 0;
+    Du = D(idx, :);
+    r_ = Du * b.';
+    B(u,:) = ccd_logit_mex(r(idx), Du, b, opt.rho * (DtD - Du'*Du), X(u,:), r_, opt.islogit, max_iter, opt.alpha+opt.beta+1e-10);
+end
+end
+function B = optimize_binary(Rt, D, B, DtD, P_b, P_d, opt)
 max_iter = 1;
 m = size(Rt, 2);
 lambda = @(x) tanh((abs(x)+1e-16)/2)./(abs(x)+1e-16)./4;
