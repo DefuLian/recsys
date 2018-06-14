@@ -1,6 +1,6 @@
-#define err_r(r, p) ((r) - (p))
+#define err_r(r, p) (r - p)
 #define err_c(r, p) ((r)/4 - lambda(p) * (p))
-#define lambda(eps) tanh((fabs(eps)+1e-6)/2)/(fabs(eps)+1e-6)/4
+#define lambda(eps) tanh((fabs(eps)+1e-16)/2)/(fabs(eps)+1e-16)/4
 #define d(i,f) Du[(i)+n*(f)]
 #include <string.h>
 #include <math.h>
@@ -30,7 +30,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	double *b_new = mxGetPr(plhs[0]);
     
     mwSize it = 0;
-    
+    mexPrintf("%d,", n);
+    for(mwSize i=0;i<n;++i)
+        mexPrintf("%f ", r_[i]);
+        //mexPrintf("%f,%f,%f ", r[i], r_[i], err_r(r[i], r_[i]));
+    mexPrintf("\n", n);
     bool converge = false;
     while(!converge)
     {
@@ -48,8 +52,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                 else{
                     ss += (err_r(r[i], r_[i]) + b[f] * d(i,f)) * d(i,f);
                     dom += d(i,f) * d(i,f);
+                    if(f==0)
+                        mexPrintf("%f %f %d,", err_r(r[i], r_[i]), d(i,f) * d(i,f), n);
                 }
-            //mexPrintf("%.0f %.0f,", ss, dom);
+            //mexPrintf("%f %f,", ss, dom);
             
             ss += x[k];
             //mexPrintf("%f,", ss);
@@ -59,7 +65,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                         ss -= b[f1]* DtD[f1+f*k];
                 dom += DtD[f+f*k];
             }
-            //mexPrintf("%f %f,", ss, dom);;
+            mexPrintf("%f %f,", ss, dom);;
             double bb;
             
             if(nrhs < 9){
@@ -90,7 +96,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                 no_change_count ++;
             
         }
-        //mexPrintf("\n");
+        mexPrintf("\n");
         if((it >= (int)max_iter-1) || (nrhs==9?(total_val<1e-4):(no_change_count == k)))
             converge = true;
         it ++;

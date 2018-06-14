@@ -36,4 +36,5 @@ l01 = xx_init'*A*xx_init - 2 * b.' *xx_init;
 %%
 
 [B,D] = dmf(Traindata, 'K', 100, 'alpha',0,'beta',0);
-[B,D] = dmf(+(Traindata>4), 'K', 32, 'alpha',0,'beta',0, 'rho',0 ,'islogit',false,'alg','ccd','max_iter',10,'init',true);
+[B,D] = dmf(+(Traindata>4), 'K', 32, 'alpha',0,'beta',0, 'rho',0 ,'islogit',true,'alg','ccd','max_iter',1,'init',true);
+[B1,D1] = dmf(+(Traindata>4), 'K', 32, 'alpha',0,'beta',0, 'rho',0 ,'islogit',true,'alg','ccd','max_iter',1,'init',true);

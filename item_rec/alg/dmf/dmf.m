@@ -39,14 +39,15 @@ for iter=1:max_iter
         + opt.beta*(norm(B-P_d,'fro')^2 +norm(D-Q_d,'fro')^2);
     fprintf('Iteration=%3d of all optimization, loss=%10.3f\n', iter-1, loss);
     DtD = D'*D;
-    B1 = optimize(Rt, D, B, DtD, P_b, P_d, opt);
-    XX = opt.alpha*P_b + opt.beta*P_d;
+    B = optimize(Rt, D, B, DtD, P_b, P_d, opt);
+    %XX = opt.alpha*P_b + opt.beta*P_d;
     %B2 = dcmf_all_mex(Rt, D, B, XX, DtD*opt.rho, 1, islogit);
-    B2 = dcmf_init_all_mex(Rt, D, B, XX, DtD*opt.rho, 1, opt.alpha+opt.beta+1e-10, opt.islogit);
+    %B = dcmf_init_all_mex(Rt, D, B, XX, DtD*opt.rho, 1, opt.alpha+opt.beta+1e-3, opt.islogit);
     BtB = B'*B;
     D = optimize(R,  B, D, BtB, Q_b, Q_d, opt);
     %YY = opt.alpha*P_b + opt.beta*P_d;
     %D = dcmf_all_mex(R, B, D, YY, BtB*opt.rho, 100, islogit);
+    %D = dcmf_init_all_mex(R, B, D, YY, BtB*opt.rho, 1, opt.alpha+opt.beta+1e-3, opt.islogit);
 end
     P_b = B-repmat(mean(B),m,1); P_d = sqrt(m) * proj_stiefel_manifold(B);
     Q_b = D-repmat(mean(D),n,1); Q_d = sqrt(n) * proj_stiefel_manifold(D);
@@ -72,7 +73,11 @@ for u=1:m
     idx = r ~= 0;
     Du = D(idx, :);
     r_ = Du * b.';
-    B(u,:) = ccd_logit_mex(r(idx), Du, b, opt.rho * (DtD - Du'*Du), X(u,:), r_, opt.islogit, max_iter, opt.alpha+opt.beta+1e-10);
+    %if u~=252
+        B(u,:) = ccd_logit_mex(full(r(idx)), Du, b, [], X(u,:), r_, opt.islogit, max_iter, opt.alpha+opt.beta+1e-3);
+    %else
+    %    B(u,:) = ccd_logit_debug(full(r(idx)), Du, b, opt.rho * (DtD - Du'*Du), X(u,:), r_, opt.islogit, max_iter, opt.alpha+opt.beta+1e-3);
+    %end
 end
 end
 function B = optimize_binary(Rt, D, B, DtD, P_b, P_d, opt)

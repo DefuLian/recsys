@@ -7,7 +7,7 @@
 #define q(i, k) Q[(i) + (k) * N]
 #define x(u, k) X[(u) + (k) * M]
 #define qs(k1, k2) Qs[(k1) + (k2) * KK]
-#define lambda(eps) tanh((eps)/2)/(eps)/4
+#define lambda(eps) tanh((fabs(eps)+1e-16)/2)/(fabs(eps)+1e-16)/4
 #define err_r(r, p) (r - p)
 #define err_c(r, p) ((r)/4 - lambda(p) * (p))
 #define pred(index) V[(index) - start_row_index] 
@@ -95,7 +95,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 					}
 					
 				}
-				
+                //if(u>=251 && u<258)
+                //    mexPrintf("%.0f %.0f,", ss, dom);
 				ss += x(u,k);
 				
 				if(isreg){
@@ -121,7 +122,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 				p(u,k) = p_new;
 				
 			}
-			
+            //if(u>=251 && u<258)
+            //    mexPrintf("\n");
 			if ((it >= (int)maxItr-1) || (tol_val <= 1e-3))
 				converge = true;
 			it ++;
