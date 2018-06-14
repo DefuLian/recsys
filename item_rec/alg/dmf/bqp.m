@@ -19,6 +19,19 @@ else
 end
 
 end
+
+function [x,l] = bqp_tiny(A, b)
+[k, ~] = size(A);
+f = @(v,f) dec2bin(v, f);
+m = num2cell(f(0:(2^k-1), k));
+m1 = cellfun(@(x) str2double(x), m);
+m = cell2mat({m1});
+m = m * 2 - 1;
+loss = sum((m * A) .* m, 2) - 2 * m * b;
+[l, ind] = min(loss);
+x = m(ind,:);
+end
+
 %%% bqp_mix alternatively use ccd and bcd for optimization.
 function [x,l] = bqp_mix(x, A, b, bsize, max_iter)
 k = size(A,1);
@@ -40,16 +53,21 @@ end
 function [x,l] = bqp_large(x, A, b, bsize, max_iter)
 k = size(A,1);
 bnum = (k + bsize - 1) / bsize; %% number of blocks
-dim_index = randperm(k);
 convergent = false;
 iter = 1;
+dim_index = randperm(k);
 while(~convergent)
     no_change_count = 0;
+    %dim_index = 1:k;
     for biter=1:bnum
         bstart = (biter - 1) * bsize + 1;
         bend = min(biter * bsize, k);
         index = false(k,1); index(dim_index(bstart:bend)) = true;
-        x_new = bqp_small(A(index, index), b(index) - A(index, ~index) * x(~index));
+        if bsize > 6
+            x_new = bqp_small(A(index, index), b(index) - A(index, ~index) * x(~index));
+        else
+            x_new = bqp_tiny(A(index, index), b(index) - A(index, ~index) * x(~index));
+        end
         no_change_count = no_change_count + sum(x(index) == x_new.');
         x(index) = x_new;
     end

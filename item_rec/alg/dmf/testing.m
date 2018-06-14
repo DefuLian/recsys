@@ -1,17 +1,19 @@
 %%
 max_iter = 100;
 seed = 30;
-rng(seed)
-a = randn(10000,100);
+%rng(seed)
+k=100;
+a = randn(10000,k);
 A = a.' * a;
-b = randn(100,1);
-x_init = +(randn(100,1)>0);
+b = randn(k,1);
+x_init = +(randn(k,1)>0);
 xx = x_init * 2 - 1;
 x_init = x_init * 2 - 1;
 l00 = x_init'*A*x_init - 2 * b.' *x_init;
-[x1,l1] = bqp(x_init, A, b, 'alg','ccd','max_iter',max_iter);
-[x2,l2] = bqp(x_init, A, b, 'alg','svr');
-[x3,l3] = bqp(x_init, A, b, 'alg','bcd','block_size',50,'max_iter',max_iter);
+tic;[x1,l1] = bqp(x_init, A, b, 'alg','ccd','max_iter',max_iter);toc
+tic;[x2,l2] = bqp(x_init, A, b, 'alg','svr');toc
+tic;[x3,l3] = bqp(x_init, A, b, 'alg','bcd','blocksize',16,'max_iter',max_iter);toc
+tic;[x4,l4] = bqp(x_init, A, b, 'alg','bcd','blocksize',1,'max_iter',max_iter);toc
 
 rng(seed)
 a = randn(10000,100);

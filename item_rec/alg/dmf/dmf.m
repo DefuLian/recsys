@@ -108,7 +108,7 @@ for u=1:m
             B(u,:) = bqp(b, (H+H')/2, f, 'alg', opt.alg, 'max_iter',max_iter, 'blocksize', opt.bsize);
         else
             r_ = Du * b.';
-            B(u,:) = ccd_logit_mex(r(idx), Du, b, opt.rho * (DtD - Du'*Du), X(u,:), r_, opt.islogit, max_iter);
+            B(u,:) = ccd_logit_mex(full(r(idx)), Du, b, opt.rho * (DtD - Du'*Du), X(u,:), r_, opt.islogit, max_iter);
         end
     end
 end
