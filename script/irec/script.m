@@ -15,4 +15,6 @@ metric30 = item_recommend(@(mat) piccf(mat, 'alpha', alpha, 'K', K, 'max_iter', 
 
 train_neg = sample_negative(+(train>0)');
 mean(sum(train_neg,2))
+
 [P, Q] = splicf(train_neg, 'test', test);
+

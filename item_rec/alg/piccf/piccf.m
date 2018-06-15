@@ -13,9 +13,13 @@ fprintf('alpha=%d, K=%d, reg_u=%f, reg_i=%f\n', alpha, K, reg_u, reg_i);
 W = GetWeight(R, alpha);
 if(isempty(P))
     P = [randn(M, K) * init_std,zeros(M,2)];
+else
+    P = [P,zeros(M,2)];
 end
 if(isempty(Q))
     Q = [randn(N, K) * init_std,zeros(N,2)];
+else
+    Q = [Q,zeros(N,2)];
 end
 F = size(X, 2); L = size(Y, 2);
 U = [randn(F, K) * init_std, zeros(F,1)]; 
@@ -120,10 +124,10 @@ end
 
 function  W  = GetWeight(R, alpha)
 if alpha>200
-    W = +(R>0) * alpha;
+    W = +(R~=0) * alpha;
 else
     [M, N] = size(R);
-    [I, J, V] = find(R);
+    [I, J, V] = find(R~=0);
     V_t = log10(1+ V * 10.^alpha);
     W = sparse(I, J, V_t, M, N);
 end

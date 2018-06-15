@@ -122,41 +122,47 @@ close(gcf);
 
 load(sprintf('~/data/checkin/%s/result_i.mat', dataset));
 a = [metric_iccf, metric_piccf{1}, metric_geomf, metric_graph, metric_wals];
-
+aa = dlmread(sprintf('~/data/checkin/%s/influ_%s.txt', dataset, dataset), ',', 1,0);
 
 figure('visible','off')
 recall = cell2mat({a.recall}');
 recall = recall(1:2:end,:)';
-linespec = {'-.x','-.', '--.',':+','-o'};
+linespec = {'-.x','-.', '--.',':+','-o','-s','-d','-^'};
 for i=1:size(recall,2)
     h = plot(recall(10:10:200,i), linespec{i}, 'linewidth',2); hold on
     set(h,'color', color2(i,:))
 end
+
+h = plot(aa(2,2:2:end), linespec{1+size(recall,2)}, 'linewidth',2); hold on
+set(h,'color', color2(1+size(recall,2),:))
+
 ApplyFigTemplate(gcf, gca)
 xlabel('cut-off'); ylabel('Recall')
 set(gca, 'ytick',0:0.05:0.25)
 ylim([0,0.26])
 %set(gca, 'xtick',5:5:20);
 set(gca, 'xticklabel',0:50:200);
-legend('GeoMF++', 'GeoMF++(300)', 'GeoMF', 'GWMF', 'WRMF', 'location', 'northwest')
+legend('GeoMF++', 'GeoMF++(300)', 'GeoMF', 'GWMF', 'WRMF','PD', 'location', 'southeast')
 print(sprintf('~/data/checkin/%s/recall_cold.pdf',dataset), '-dpdf')
 close(gcf);
 
 figure('visible','off')
 ndcg = cell2mat({a.ndcg}');
 ndcg = ndcg(1:2:end,:)';
-linespec = {'-.x','-.', '--.',':+','-o','-o'};
+linespec = {'-.x','-.', '--.',':+','-o','-s','-d','-^'};
 for i=1:size(ndcg,2)
     h = plot(ndcg(10:10:200,i), linespec{i}, 'linewidth',2); hold on
     set(h,'color', color2(i,:))
 end
+h = plot(aa(1,2:2:end), linespec{1+size(recall,2)}, 'linewidth',2); hold on
+set(h,'color', color2(1+size(recall,2),:))
 
 ApplyFigTemplate(gcf, gca)
 xlabel('cut-off'); ylabel('NDCG')
 set(gca, 'ytick',0.0:0.03:0.15)
 %set(gca, 'xtick',5:5:20);
 set(gca, 'xticklabel',0:50:200);
-legend('GeoMF++', 'GeoMF++(300)', 'GeoMF', 'GWMF', 'WRMF', 'location', 'northwest')
+legend('GeoMF++', 'GeoMF++(300)', 'GeoMF', 'GWMF', 'WRMF','PD', 'location', 'southeast')
 print(sprintf('~/data/checkin/%s/ndcg_cold.pdf',dataset), '-dpdf')
 close(gcf);
 
@@ -285,39 +291,46 @@ close(gcf);
 
 load(sprintf('~/data/checkin/%s/result_i.mat', dataset));
 a = [metric_iccf_half_reg, metric_piccf{end-1}, metric_geomf150, metric_graph, metric_wals];
+aa = dlmread(sprintf('~/data/checkin/%s/influ_%s.txt', dataset, dataset), ',', 1,0);
+
 figure('visible','off')
 recall = cell2mat({a.recall}');
 recall = recall(1:2:end,:)';
-linespec = {'-.x','-.','--.',':+','-o'};
+linespec = {'-.x','-.','--.',':+','-o','-s','-d','-^'};
 for i=1:size(recall,2)
     h = plot(recall(10:10:200,i), linespec{i}, 'linewidth',2); hold on
     set(h, 'color', color2(i,:));
 end
+h = plot(aa(2,2:2:end), linespec{1+size(recall,2)}, 'linewidth',2); hold on
+set(h,'color', color2(1+size(recall,2),:))
+
 ApplyFigTemplate(gcf, gca)
 xlabel('cut-off'); ylabel('Recall')
 %set(gca, 'ytick',0:0.05:0.25)
 %ylim([0,0.26])
 %set(gca, 'xtick',5:5:20);
 set(gca, 'xticklabel',0:50:200);
-legend('GeoMF++','GeoMF++(300)','GeoMF', 'GWMF', 'WRMF', 'location', 'southeast')
+legend('GeoMF++','GeoMF++(300)','GeoMF', 'GWMF', 'WRMF', 'PD', 'location', 'southeast')
 print(sprintf('~/data/checkin/%s/recall_cold.pdf',dataset), '-dpdf')
 close(gcf);
 
 figure('visible','off')
 ndcg = cell2mat({a.ndcg}');
 ndcg = ndcg(1:2:end,:)';
-linespec = {'-.x','-.','--.',':+','-o'};
+linespec = {'-.x','-.','--.',':+','-o','-s','-d','-^'};
 for i=1:size(ndcg,2)
     h = plot(ndcg(10:10:200,i), linespec{i}, 'linewidth',2); hold on
     set(h, 'color', color2(i,:));
 end
+h = plot(aa(1,2:2:end), linespec{1+size(ndcg,2)}, 'linewidth',2); hold on
+set(h,'color', color2(1+size(ndcg,2),:))
 
 ApplyFigTemplate(gcf, gca)
 xlabel('cut-off'); ylabel('NDCG')
 %set(gca, 'ytick',0.0:0.03:0.15)
 %set(gca, 'xtick',5:5:20);
 set(gca, 'xticklabel',0:50:200);
-legend('GeoMF++', 'GeoMF++(300)', 'GeoMF', 'GWMF', 'WRMF', 'location', 'southeast')
+legend('GeoMF++', 'GeoMF++(300)', 'GeoMF', 'GWMF', 'WRMF', 'PD', 'location', 'southeast')
 print(sprintf('~/data/checkin/%s/ndcg_cold.pdf',dataset), '-dpdf')
 close(gcf);
 

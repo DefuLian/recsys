@@ -9,11 +9,19 @@ data = dlmread(fileName, sep);
 if zero_start
     nrows = max(max(data(:,1)) + 1, nrows);
     ncols = max(max(data(:,2)) + 1, ncols);
-    mat = sparse(data(:,1) + 1, data(:,2) + 1, data(:,3), nrows, ncols);
+    if size(data, 2) == 3
+        mat = sparse(data(:,1) + 1, data(:,2) + 1, data(:,3), nrows, ncols);
+    else
+        mat = sparse(data(:,1) + 1, data(:,2) + 1, 1, nrows, ncols);
+    end
 else
     nrows = max(max(data(:,1)), nrows);
     ncols = max(max(data(:,2)), ncols);
-    mat = sparse(data(:,1), data(:,2), data(:,3), nrows, ncols);
+    if size(data, 2) == 3
+        mat = sparse(data(:,1), data(:,2), data(:,3), nrows, ncols);
+    else
+        mat = sparse(data(:,1), data(:,2), 1, nrows, ncols);
+    end
 end
 end
 

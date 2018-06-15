@@ -12,6 +12,7 @@ function ApplyFigTemplate(fig, ax, ratio )
     %set(ax,'position',[0.19,0.18,0.77,0.77]);
     %set(ax,'position',[0.15,0.18,0.77+0.04,0.75]);
     set(ax,'position',[0.17,0.17,0.78,0.76]);
+    %set(ax,'position',[0.17,0.17,0.7,0.7]);
     %set(ax,'position',[0.15,0.15,0.79,0.79]);
     set(ax,'fontsize',12);
 end

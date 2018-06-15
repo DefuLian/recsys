@@ -1,6 +1,7 @@
 function R = sample_negative(Rt)
     [N, M] = size(Rt);
-    weight = full(sum(Rt,2));
+    %weight = full(sum(Rt,2));
+    weight = ones(N,1);
     items = 1:N;
     user_list = cell(M, 1);
     item_list = cell(M, 1);

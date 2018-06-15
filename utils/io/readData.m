@@ -5,8 +5,8 @@ function [ train, test ] = readData( data_dir, zero_start )
 %   directory, there is a training file, named as train.txt and a testing
 %   file, named as test.txt; each line in these two files consist of
 %   user_id, item_id and rating; these fields are delimited by one tab
-train_file = fullfile(data_dir, 'train.txt');
-test_file = fullfile(data_dir, 'test.txt');
+train_file = fullfile(data_dir, 'train_influ.tsv');
+test_file = fullfile(data_dir, 'test_influ.tsv');
 f_train = fopen(train_file);
 f_test = fopen(test_file);
 C_train = textscan(f_train,'%f\t%f\t%f');
