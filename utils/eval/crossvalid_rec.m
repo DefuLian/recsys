@@ -9,20 +9,11 @@ function [metric,elapsed] = crossvalid_rec(rec, mat, scoring, varargin)
 %   i: item
 
 
-[folds, fold_mode, topk, cutoff, rec_opt] = process_options(varargin, 'folds', 5,...
-    'fold_mode', 'un', 'topk', -1, 'cutoff', -1);
+[folds, fold_mode, rec_opt] = process_options(varargin, 'folds', 5, 'fold_mode', 'un');
 
 assert(folds>0)
 
-if topk > 0 && cutoff > 0
-    topk = cutoff;
-elseif cutoff<=0
-    if topk>0
-        cutoff = topk;
-    else
-        cutoff = 200;
-    end
-end
+
 
 mat_fold = kFolds(mat, folds, fold_mode);
 metric = struct();
@@ -34,7 +25,7 @@ for i=1:folds
     tic;
     if strcmp(fold_mode, 'i') % in this mode, only those items within the same fold are required for comparison
         ind = sum(test)>0;
-        metric_fold = scoring(train(:,ind), test(:,ind), P,  Q(ind,:), topk, cutoff);
+        metric_fold = scoring(train(:,ind), test(:,ind), P,  Q(ind,:));
     else
         metric_fold = scoring(train, test, P,  Q, topk, cutoff);
     end

@@ -1,4 +1,4 @@
-function metric = evaluation_rating(test, P, Q, k)
+function metric = evaluate_rating(test, P, Q, k)
 [I,J,V] = find(test);
 pred_val = sum(P(I,:) .* Q(J,:), 2);
 all_col = [I,J,V,pred_val];
@@ -10,29 +10,26 @@ user_count = full(sum(test>0,2));
 cum_user_count = cumsum(user_count);
 cum_user_count = [0;cum_user_count];
 num_users = size(test,1);
-uind = 1;
-ndcg_all = zeros(num_users - sum(sum(test>0)==0),k);
+ndcg_all = zeros(num_users,k+1);
 for u=1:num_users
-    if user_count(u) == 0
-        continue;
+    if user_count(u) > 0
+        u_start = cum_user_count(u)+1;
+        u_end = cum_user_count(u+1);
+        act = act_col(u_start:u_end,3);
+        n = user_count(u);
+        discount = log2((1:n)'+1);
+        pred = pred_col(u_start:u_end,3);
+        idcg = cumsum((2.^act - 1) ./ discount);
+        dcg = cumsum((2.^pred - 1) ./discount);
+        ndcg = dcg ./ idcg;
+        if k > length(ndcg)
+            ndcg = [ndcg; repmat(ndcg(end), k-length(ndcg),1)];
+        else
+            ndcg = [ndcg(1:k);ndcg(end)];
+        end
+        ndcg_all(u,:) = ndcg;
     end
-    u_start = cum_user_count(u)+1;
-    u_end = cum_user_count(u+1);
-    act = act_col(u_start:u_end,3);
-    discount = log2((1:k)'+1);
-    pred = pred_col(u_start:u_end,3);
-    if k > length(act)
-        act_extend = [act; zeros(k-length(act),1)];
-        pred_extend = [pred; zeros(k-length(act),1)];
-    else
-        act_extend = act(1:k);
-        pred_extend = pred(1:k);
-    end
-    idcg = cumsum((2.^act_extend - 1) ./ discount);
-    dcg = cumsum((2.^pred_extend - 1) ./discount);
-    ndcg_all(uind,:) = dcg ./ idcg;
-    uind = uind + 1;
 end
-
-metric = struct('ndcg', mean(ndcg_all), 'rmse', rmse, 'mae', mae);
+ndcg_all = ndcg_all(user_count>0,:);
+metric = struct('ndcg', mean(ndcg_all(:,1:k)), 'rmse', rmse, 'mae', mae, 'ndcgri', mean(ndcg_all(:,end)));
 end

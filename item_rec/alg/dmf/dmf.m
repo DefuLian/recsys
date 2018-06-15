@@ -14,16 +14,25 @@ function [B, D] = dmf(R, varargin)
 %%% alpha regularization coefficient for balanced condition
 %%% beta  regularization coefficient for decorrelation condition
 
-[k, max_iter, debug, islogit, alpha, beta, rho, alg, bsize, init] = process_options(varargin, 'K', 64, 'max_iter', 10, 'debug', true, ...
-    'islogit', false, 'alpha',0.01, 'beta', 0.01, 'rho', 0.01, 'alg', 'ccd','blocksize',32, 'init', false);
+[k, max_iter, debug, islogit, alpha, beta, rho, alg, bsize, init, B, D, test] = process_options(varargin, 'K', 64, 'max_iter', 10, 'debug', true, ...
+    'islogit', false, 'alpha',0.01, 'beta', 0.01, 'rho', 0.01, 'alg', 'ccd','blocksize',32, 'init', false,...
+    'B0',[], 'D0',[], 'test',[]);
 if ~islogit && ~init
     R = scale_matrix(R, k);
 end
 [m, n]=size(R);
 rng(10);
-B = randn(m,k)*0.1; D = randn(n,k)*0.1;
-if ~init
-    B = 2*(B>0)-1; D = 2*(D>0)-1;
+if isempty(B)
+    B = randn(m,k)*0.1; 
+    if ~init
+        B = 2*(B>0)-1; 
+    end
+end
+if isempty(D)
+    D = randn(n,k)*0.1;
+    if ~init
+        D = 2*(D>0)-1;
+    end
 end
 Rt = R.';
 opt.rho = rho;
@@ -33,22 +42,33 @@ opt.islogit = islogit;
 opt.alg = alg;
 opt.bsize = bsize;
 opt.init = init;
-for iter=1:max_iter
+converge = false;
+iter = 1;
+%for iter=1:max_iter
+while ~converge
+    B0 = B; D0 = D;
     P_b = B-repmat(mean(B),m,1); P_d = sqrt(m) * proj_stiefel_manifold(B);
     Q_b = D-repmat(mean(D),n,1); Q_d = sqrt(n) * proj_stiefel_manifold(D);
-    loss = loss_(R, B, D, opt) + opt.alpha * (norm(B-P_b,'fro')^2 + norm(D-Q_b,'fro')^2) ...
-        + opt.beta*(norm(B-P_d,'fro')^2 +norm(D-Q_d,'fro')^2);
-    fprintf('Iteration=%3d of all optimization, loss=%10.3f\n', iter-1, loss);
     DtD = D'*D;
     B = optimize(Rt, D, B, DtD, P_b, P_d, opt);
     BtB = B'*B;
     D = optimize(R,  B, D, BtB, Q_b, Q_d, opt);
+    if debug
+        loss = loss_(R, B, D, opt) + opt.alpha * (norm(B-P_b,'fro')^2 + norm(D-Q_b,'fro')^2) ...
+            + opt.beta*(norm(B-P_d,'fro')^2 +norm(D-Q_d,'fro')^2);
+        fprintf('Iteration=%3d of all optimization, loss=%.1f,', iter-1, loss);
+        if ~isempty(test)
+            metric = evaluate_rating(test,B,D,10);
+            fprintf('ndcg@1=%.3f', metric.ndcg(1));
+        end
+        fprintf('\n')
+    end
+    if iter >= max_iter || (norm(B-B0) <1e-3 && norm(D-D0)<1e-3)
+        converge = true;
+    end
+    iter = iter + 1;
 end
-    P_b = B-repmat(mean(B),m,1); P_d = sqrt(m) * proj_stiefel_manifold(B);
-    Q_b = D-repmat(mean(D),n,1); Q_d = sqrt(n) * proj_stiefel_manifold(D);
-    loss = loss_(R, B, D, opt) + opt.alpha * (norm(B-P_b,'fro')^2 + norm(D-Q_b,'fro')^2) ...
-        + opt.beta*(norm(B-P_d,'fro')^2 +norm(D-Q_d,'fro')^2);
-    fprintf('Iteration=%3d of all optimization, loss=%10.3f\n', iter, loss);
+    
 end
 
 function B = optimize(Rt, D, B, DtD, P_b, P_d, opt)

@@ -36,11 +36,13 @@ l01 = xx_init'*A*xx_init - 2 * b.' *xx_init;
 %sum(x ~=xx)
 
 %%
-load ~/data/ml100kdata.mat
+load C:/Users/liand/Desktop/code/dataset/ml100kdata.mat;
 [B,D] = dmf(Traindata, 'K', 100, 'alpha',0,'beta',0);
 [B,D] = dmf(+(Traindata>4), 'K', 32, 'alpha',0,'beta',0, 'rho',0 ,'islogit',true,'alg','ccd','max_iter',1,'init',true);
-[B1,D1] = dmf(+(Traindata>4), 'K', 32, 'alpha',0,'beta',0, 'rho',0 ,'islogit',true,'alg','bcd','max_iter',10,'init',true);
-
+[B1,D1] = dmf(Traindata, 'K', 32, 'alpha',0,'beta',0, 'rho',0 ,'islogit',false,'alg','bcd','max_iter',20,'init',true, 'debug',true, 'test', Testdata);
+metric = evaluate_rating(Testdata, B1, D1, 10);
+[ndcg,rmse] = rating_metric(Testdata, B1, D1, 10);
+metric2 = rating_recommend(@(mat) dmf(mat, 'K', 32, 'alpha',0,'beta',0, 'rho',0 ,'islogit',false,'alg','bcd','max_iter',20,'init',true), Traindata, 'test', Testdata);
 %%
 i=50;
 aii = A(i,i);
