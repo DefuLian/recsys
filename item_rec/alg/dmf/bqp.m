@@ -53,9 +53,9 @@ end
 function [x,l] = bqp_large(x, A, b, bsize, max_iter)
 k = size(A,1);
 bnum = (k + bsize - 1) / bsize; %% number of blocks
+dim_index = randperm(k);
 convergent = false;
 iter = 1;
-dim_index = randperm(k);
 while(~convergent)
     no_change_count = 0;
     %dim_index = 1:k;
@@ -63,7 +63,7 @@ while(~convergent)
         bstart = (biter - 1) * bsize + 1;
         bend = min(biter * bsize, k);
         index = false(k,1); index(dim_index(bstart:bend)) = true;
-        if bsize > 6
+        if bsize > 3
             x_new = bqp_small(A(index, index), b(index) - A(index, ~index) * x(~index));
         else
             x_new = bqp_tiny(A(index, index), b(index) - A(index, ~index) * x(~index));

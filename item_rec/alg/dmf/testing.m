@@ -41,6 +41,15 @@ load ~/data/ml100kdata.mat
 [B,D] = dmf(+(Traindata>4), 'K', 32, 'alpha',0,'beta',0, 'rho',0 ,'islogit',true,'alg','ccd','max_iter',1,'init',true);
 [B1,D1] = dmf(+(Traindata>4), 'K', 32, 'alpha',0,'beta',0, 'rho',0 ,'islogit',true,'alg','bcd','max_iter',10,'init',true);
 
+%%
+i=50;
+aii = A(i,i);
+ai = A(i,:);
+x = randn(k,1);
+bb = b(i) - ai*x + x(i)*aii;
+L = [aii,0.00001;0.00001,0];
+[~, X, ~] = psd_ip(L,'precision', 6);
 
-
+Xi = mvnrnd(zeros(2,1), X, 10);
+loss = sum((Xi * C) .* Xi, 2);
 
