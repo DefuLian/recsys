@@ -43,6 +43,10 @@ load C:/Users/liand/Desktop/code/dataset/ml100kdata.mat;
 metric = evaluate_rating(Testdata, B1, D1, 10);
 [ndcg,rmse] = rating_metric(Testdata, B1, D1, 10);
 metric2 = rating_recommend(@(mat) dmf(mat, 'K', 32, 'alpha',0,'beta',0, 'rho',0 ,'islogit',false,'alg','bcd','max_iter',20,'init',true), Traindata, 'test', Testdata);
+[B,D] = pph(Traindata, 'K', 32, 'max_iter',20, 'lambda',0.1, 'test', Testdata);
+metric = evaluate_rating(Testdata, B, D, 10);
+metric3 = evaluate_rating(Testdata, B, D, 10);
+
 %%
 i=50;
 aii = A(i,i);
