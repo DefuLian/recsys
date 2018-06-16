@@ -1,12 +1,12 @@
-function [B, D] = pph(R, varargin )
-%Preference Preserving Hashing for Efficient Recommendation
-%   
+function [B,D] = bccf(R, varargin)
 [opt.lambda, max_iter, k, test, debug] = process_options(varargin, 'lambda', 0.01, 'max_iter', 10, 'K', 20, 'test', [], 'debug',true);
 [m,n] = size(R);
+[I,J,V]=find(R);
+V = (V - min(V)) ./ (max(V) - min(V));
+R = sparse(I,J,V,m,n);
 Rt = R';
 rng(200);
 B = randn(m,k)*0.1; D = randn(n,k)*0.1;
-opt.rmax = max(max(R));
 converge = false;
 it = 1;
 loss0 = 0;
@@ -28,47 +28,47 @@ while ~converge
     it = it + 1;
     loss0 = loss;
 end
-B1 = 2*(B>0)-1; D1 = 2*(D>0)-1;
-v = sum(D.^2, 2); mu = mean(v); sigma = std(v);
-idx1 = v < mu - sigma;
-idx2 = v > mu + sigma;
-D2 = [-ones(n,1),ones(n,1)];
-D2(idx1, 2) = -1; D2(idx2, 1) = 1;
-B2 = ones(m, 2);
-B = [B1,B2]; D = [D1,D2];
+
 function v = loss_()
     [r_idx, c_idx, r] = find(R);
     r_ = sum(B(r_idx,:) .* D(c_idx,:),2);
-    v = sum((r - opt.rmax/2 - r_).^2);
-    v = v + opt.lambda * sum((sum(B.^2, 2) - opt.rmax/2).^2);
-    v = v + opt.lambda * sum((sum(D.^2, 2) - opt.rmax/2).^2);
+    v = sum((r - 1/2 - r_/(2*k)).^2);
+    v = v + opt.lambda * norm(sum(B))^2;
+    v = v + opt.lambda * norm(sum(D))^2;
 end
+
 end
 
 function B = optimize_(Rt, D, B, opt)
 m = size(Rt, 2);
 k = size(D,2);
+opt.bsum = sum(B)';
 for u=1:m
     r = Rt(:,u);
     b = B(u,:)';
     idx = r~=0;
     Du = D(idx,:);
-    ru = full(r(idx)) - opt.rmax/2;
-    opt.H = 2 * (Du' * Du);
-    opt.g = @(x) opt.H * x - 2 * Du' * ru;
-    opt.f = @(x) sum((ru - Du * x).^2);
-    options = optimoptions('fminunc','Algorithm','trust-region', ...
+    ru = (full(r(idx)) - 1/2);
+    opt.H = 1/(2*k^2) * (Du' * Du);
+    opt.g = @(x) opt.H * x - Du' * (ru / k);
+    opt.f = @(x) sum((ru - Du * x / (2*k)).^2);
+    
+    opt.bsum = opt.bsum - b;
+    options = optimoptions('fmincon','Algorithm','trust-region-reflective', ...
         'SpecifyObjectiveGradient',true,'HessianFcn','objective','Display','off');
-    B(u,:) = fminunc(@(x) fun(x,opt), zeros(k,1), options);
+    b1 = fmincon(@(x) fun(x,opt), b, [], [], [], [], -ones(k,1), ones(k,1),[], options);
+    %options = optimoptions('fminunc','Algorithm','trust-region', ...
+    %    'SpecifyObjectiveGradient',true,'HessianFcn','objective','Display','off','MaxIterations',20);
+    %b1 = fminunc(@(x) fun(x,opt), b, options);
+    opt.bsum = opt.bsum + b1;
+    B(u,:) = b1;
 end
 end
 
 function [f,g,H] = fun(b, opt)
 % d: kx1 vector
     k = length(b);
-    v = norm(b)^2 - opt.rmax/2;
-    f = opt.lambda * v^2 + opt.f(b);
-    g = 4*opt.lambda* v * b + opt.g(b);
-    H = 4*opt.lambda*(v*eye(k) + 2 * (b * b')) + opt.H;
+    f = opt.lambda * ( norm(opt.bsum + b)^2 ) + opt.f(b);
+    g = opt.lambda * 2 * (opt.bsum + b) + opt.g(b);
+    H = opt.lambda * 2 * eye(k) + opt.H;
 end
-

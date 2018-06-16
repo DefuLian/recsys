@@ -34,7 +34,17 @@ l01 = xx_init'*A*xx_init - 2 * b.' *xx_init;
 %c = zeros(100,1);
 %DCDmex(xx, A, b, c, 1);
 %sum(x ~=xx)
+b = randn(10,1);
+A = randn(10,10);
+A = A'*A;
+xx = A\b;
+options = optimoptions('fminunc','Algorithm','trust-region','Display','off',...
+        'SpecifyObjectiveGradient',true,'HessianFcn','objective','MaxIterations',20);
+xstar = fminunc(@(x) fun(x,A,b), zeros(10,1), options);
 
+f = @(x) x'* A*x - 2*b'*x;
+f(xx)
+f(xstar)
 %%
 load C:/Users/liand/Desktop/code/dataset/ml100kdata.mat;
 [B,D] = dmf(Traindata, 'K', 100, 'alpha',0,'beta',0);
@@ -46,6 +56,7 @@ metric2 = rating_recommend(@(mat) dmf(mat, 'K', 32, 'alpha',0,'beta',0, 'rho',0 
 [B,D] = pph(Traindata, 'K', 32, 'max_iter',20, 'lambda',0.1, 'test', Testdata);
 metric = evaluate_rating(Testdata, B, D, 10);
 metric3 = evaluate_rating(Testdata, B, D, 10);
+[B,D] = bccf(Traindata, 'K', 32, 'max_iter',20, 'lambda',0, 'test', Testdata);
 
 %%
 i=50;
