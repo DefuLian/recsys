@@ -65,6 +65,7 @@ function [f,g,H] = fun(b, opt)
 end
 
 function [B,D] = rounding(B,D)
+m = size(B,1); n = size(D,1);
 B1 = 2*(B>0)-1; D1 = 2*(D>0)-1;
 v = sum(D.^2, 2); mu = mean(v); sigma = std(v);
 idx1 = v < mu - sigma;

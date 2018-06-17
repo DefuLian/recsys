@@ -49,13 +49,13 @@ for u=1:m
     idx = r~=0;
     Du = D(idx,:);
     ru = (full(r(idx)) - 1/2);
-    opt.H = 1/(2*k^2) * (Du' * Du);
+    %opt.H = 1/(2*k^2) * (Du' * Du);
     opt.g = @(x) 1/(2*k^2) * (Du' * (Du * x)) - Du' * (ru / k);
     opt.f = @(x) sum((ru - Du * x / (2*k)).^2);
-    
+    hfun = @(Hinfo,Y) Hinfo*Y - 1/(2*k^2) * (Du' * (Du * Y));
     opt.bsum = opt.bsum - b;
     options = optimoptions('fmincon','Algorithm','trust-region-reflective', ...
-        'SpecifyObjectiveGradient',true,'HessianFcn','objective','Display','off');
+        'SpecifyObjectiveGradient',true,'HessianMultiplyFcn',hfun,'Display','off');
     b1 = fmincon(@(x) fun(x,opt), b, [], [], [], [], -ones(k,1), ones(k,1),[], options);
     %options = optimoptions('fminunc','Algorithm','trust-region', ...
     %    'SpecifyObjectiveGradient',true,'HessianFcn','objective','Display','off','MaxIterations',20);
@@ -70,7 +70,7 @@ function [f,g,H] = fun(b, opt)
     k = length(b);
     f = opt.lambda * norm(opt.bsum + b)^2  + opt.f(b);
     g = opt.lambda * 2 * (opt.bsum + b) + opt.g(b);
-    H = opt.lambda * 2 * eye(k) + opt.H;
+    H = opt.lambda * 2 ;%* speye(k); %+ opt.H;
 end
 function [B1,D1] = itq(B,D)
 [B1,D1]=rounding(B,D);
