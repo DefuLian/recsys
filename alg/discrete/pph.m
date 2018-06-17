@@ -28,14 +28,7 @@ while ~converge
     it = it + 1;
     loss0 = loss;
 end
-B1 = 2*(B>0)-1; D1 = 2*(D>0)-1;
-v = sum(D.^2, 2); mu = mean(v); sigma = std(v);
-idx1 = v < mu - sigma;
-idx2 = v > mu + sigma;
-D2 = [-ones(n,1),ones(n,1)];
-D2(idx1, 2) = -1; D2(idx2, 1) = 1;
-B2 = ones(m, 2);
-B = [B1,B2]; D = [D1,D2];
+[B,D] = rounding(B,D);
 function v = loss_()
     [r_idx, c_idx, r] = find(R);
     r_ = sum(B(r_idx,:) .* D(c_idx,:),2);
@@ -47,7 +40,6 @@ end
 
 function B = optimize_(Rt, D, B, opt)
 m = size(Rt, 2);
-k = size(D,2);
 for u=1:m
     r = Rt(:,u);
     b = B(u,:)';
@@ -55,11 +47,11 @@ for u=1:m
     Du = D(idx,:);
     ru = full(r(idx)) - opt.rmax/2;
     opt.H = 2 * (Du' * Du);
-    opt.g = @(x) opt.H * x - 2 * Du' * ru;
+    opt.g = @(x) 2 * (Du' * (Du * x)) - 2 * (Du' * ru);
     opt.f = @(x) sum((ru - Du * x).^2);
     options = optimoptions('fminunc','Algorithm','trust-region', ...
         'SpecifyObjectiveGradient',true,'HessianFcn','objective','Display','off');
-    B(u,:) = fminunc(@(x) fun(x,opt), zeros(k,1), options);
+    B(u,:) = fminunc(@(x) fun(x,opt), b, options);
 end
 end
 
@@ -70,5 +62,16 @@ function [f,g,H] = fun(b, opt)
     f = opt.lambda * v^2 + opt.f(b);
     g = 4*opt.lambda* v * b + opt.g(b);
     H = 4*opt.lambda*(v*eye(k) + 2 * (b * b')) + opt.H;
+end
+
+function [B,D] = rounding(B,D)
+B1 = 2*(B>0)-1; D1 = 2*(D>0)-1;
+v = sum(D.^2, 2); mu = mean(v); sigma = std(v);
+idx1 = v < mu - sigma;
+idx2 = v > mu + sigma;
+D2 = [-ones(n,1),ones(n,1)];
+D2(idx1, 2) = -1; D2(idx2, 1) = 1;
+B2 = ones(m, 2);
+B = [B1,B2]; D = [D1,D2];
 end
 

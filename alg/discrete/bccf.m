@@ -28,7 +28,7 @@ while ~converge
     it = it + 1;
     loss0 = loss;
 end
-
+[B,D]=itq(B,D);
 function v = loss_()
     [r_idx, c_idx, r] = find(R);
     r_ = sum(B(r_idx,:) .* D(c_idx,:),2);
@@ -50,7 +50,7 @@ for u=1:m
     Du = D(idx,:);
     ru = (full(r(idx)) - 1/2);
     opt.H = 1/(2*k^2) * (Du' * Du);
-    opt.g = @(x) opt.H * x - Du' * (ru / k);
+    opt.g = @(x) 1/(2*k^2) * (Du' * (Du * x)) - Du' * (ru / k);
     opt.f = @(x) sum((ru - Du * x / (2*k)).^2);
     
     opt.bsum = opt.bsum - b;
@@ -68,7 +68,32 @@ end
 function [f,g,H] = fun(b, opt)
 % d: kx1 vector
     k = length(b);
-    f = opt.lambda * ( norm(opt.bsum + b)^2 ) + opt.f(b);
+    f = opt.lambda * norm(opt.bsum + b)^2  + opt.f(b);
     g = opt.lambda * 2 * (opt.bsum + b) + opt.g(b);
     H = opt.lambda * 2 * eye(k) + opt.H;
 end
+function [B1,D1] = itq(B,D)
+[B1,D1]=rounding(B,D);
+converge = false;
+loss0=inf;
+while ~converge
+    Q = proj_stiefel_manifold(B'*B1+D'*D1);
+    [B1,D1] = rounding(B*Q, D*Q);
+    loss1 = loss_();
+    if(abs(loss1-loss0)<1e-6*loss1 || loss1>loss0)
+        converge = true;
+    end
+    %fprintf('%f\n',loss1);
+    loss0 = loss1;
+end
+function v=loss_()
+    v = norm(B1-B*Q, 'fro')^2 + norm(D1-D*Q, 'fro')^2;
+end
+end
+function [B1,D1] = rounding(B,D)
+B1 = bsxfun(@gt, B, median(B));
+B1 = 2*B1 - 1;
+D1 = bsxfun(@gt, D, median(D));
+D1 = 2*D1 - 1;
+end
+
