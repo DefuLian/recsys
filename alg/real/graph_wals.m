@@ -1,6 +1,6 @@
 function [ U, V] = graph_wals(train, varargin )
 
-randn('state', 10);
+%randn('state', 10);
 R = train>0;
 [M, N] = size(R);
 [max_iter, reg_u, reg_i, Su,  Si, alpha, eta_u, eta_i, K, init_std] = process_options(varargin, 'max_iter', 10, 'reg_u', 0.01, 'reg_i', 0.01, ...

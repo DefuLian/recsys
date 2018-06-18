@@ -1,4 +1,4 @@
-function [metric,elapsed] = crossvalid_rec(rec, mat, scoring, varargin)
+function [eval_summary, eval_detail,elapsed] = crossvalid_rec(rec, mat, scoring, varargin)
 % rec: recommendation method
 % mat: matrix storing records
 % mode of cross validation: 
@@ -9,14 +9,14 @@ function [metric,elapsed] = crossvalid_rec(rec, mat, scoring, varargin)
 %   i: item
 
 
-[folds, fold_mode, rec_opt] = process_options(varargin, 'folds', 5, 'fold_mode', 'un');
+[folds, fold_mode, seed, rec_opt] = process_options(varargin, 'folds', 5, 'fold_mode', 'un', 'seed', 1);
 
 assert(folds>0)
 
 
-
+rng(seed);
 mat_fold = kFolds(mat, folds, fold_mode);
-metric = struct();
+eval_detail = struct();
 elapsed = zeros(1,2);
 for i=1:folds
     test = mat_fold{i};
@@ -27,26 +27,28 @@ for i=1:folds
         ind = sum(test)>0;
         metric_fold = scoring(train(:,ind), test(:,ind), P,  Q(ind,:));
     else
-        metric_fold = scoring(train, test, P,  Q, topk, cutoff);
+        metric_fold = scoring(train, test, P,  Q);
     end
     elapsed(2) = elapsed(2) + toc/folds;
     fns = fieldnames(metric_fold);
     for f=1:length(fns)
         fieldname = fns{f};
-        if isfield(metric, fieldname)
-            metric.(fieldname) = metric.(fieldname) + [metric_fold.(fieldname);(metric_fold.(fieldname)).^2];
+        if isfield(eval_detail, fieldname)
+            %metric.(fieldname) = metric.(fieldname) + [metric_fold.(fieldname);(metric_fold.(fieldname)).^2];
+            eval_detail.(fieldname) = [eval_detail.(fieldname); metric_fold.(fieldname)];
         else
-            metric.(fieldname) = [metric_fold.(fieldname);(metric_fold.(fieldname)).^2];
+            %metric.(fieldname) = [metric_fold.(fieldname);(metric_fold.(fieldname)).^2];
+            eval_detail.(fieldname) = metric_fold.(fieldname);
         end
     end
 end
-fns = fieldnames(metric);
+fns = fieldnames(eval_detail);
 for f=1:length(fns)
     fieldname = fns{f};
-    field = metric.(fieldname);
-    field_mean = field(1,:) / folds;
-    field_std = sqrt(field(2,:)./folds - field_mean .* field_mean);
-    metric.(fieldname) = [field_mean; field_std];
+    field = eval_detail.(fieldname);
+    %field_mean = field(1,:) / folds;
+    %field_std = sqrt(field(2,:)./folds - field_mean .* field_mean);
+    eval_summary.(fieldname) = [mean(field); std(field)];
 end
 end
 

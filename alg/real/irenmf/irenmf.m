@@ -10,7 +10,7 @@ function [U, V] = irenmf(R, varargin)
     
     W = R * alpha;
     geo_alpha = 0.6;
-    rng(10);
+    %rng(10);
     userW=sqrt(1/K)*rand(M, K+2);  
     itemW=sqrt(1/K)*rand(N, K+2); 
     userW(:, 1)=1; 

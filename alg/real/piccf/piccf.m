@@ -1,6 +1,6 @@
 function [P, Q, U, V, metric] = piccf(R, varargin)
 [M, N] = size(R);
-randn('state', 10);
+%randn('state', 10);
 init_std = 0.01;
 [X, Y, alpha, test, max_iter, K, P, Q, reg_u, reg_i, is_item_fixed, is_user_fixed, ...
     user_bias, item_bias, usr_w, item_w, method, k_verbose, pos_eval] = ...

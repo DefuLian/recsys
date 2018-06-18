@@ -1,6 +1,6 @@
 function [U, V] = geomf(R, varargin)
 [M, N] =size(R);
-randn('state', 10);
+%randn('state', 10);
 
 [max_iter, alpha, reg_u, reg_i, reg_1, init_std, K, Y] = ...
    process_options(varargin, 'max_iter', 10, 'alpha', 30, 'reg_u', 0.01, ...
