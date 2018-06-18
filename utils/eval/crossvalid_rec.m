@@ -48,7 +48,7 @@ for f=1:length(fns)
     field = eval_detail.(fieldname);
     %field_mean = field(1,:) / folds;
     %field_std = sqrt(field(2,:)./folds - field_mean .* field_mean);
-    eval_summary.(fieldname) = [mean(field); std(field)];
+    eval_summary.(fieldname) = [mean(field,1); std(field,0,1)];
 end
 end
 

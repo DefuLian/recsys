@@ -1,7 +1,7 @@
 function [eval_summary, eval_detail, elapsed] = heldout_rec(rec, mat, scoring, varargin)
 % elapsed: training time and testing time.
 [test, test_ratio, train_ratio, split_mode, times, seed, rec_opt] = process_options(varargin, 'test', [], ...
-    'test_ratio', 0.2, 'train_ratio', -1, 'split_mode', 'un', 'times', 5, 'seed', 1);
+    'test_ratio', 0.2, 'train_ratio', -1, 'split_mode', 'un', 'times', 1, 'seed', 1);
 if train_ratio<0
     train_ratio = 1 - test_ratio;
 end
@@ -58,7 +58,7 @@ else
         field = eval_detail.(fieldname);
         %field_mean = field(1,:) / times;
         %field_std = sqrt(field(2,:)./times - field_mean .* field_mean);
-        eval_summary.(fieldname) = [mean(field); std(field)];
+        eval_summary.(fieldname) = [mean(field,1); std(field,0,1)];
     end
 end
 
