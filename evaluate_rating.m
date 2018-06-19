@@ -23,7 +23,7 @@ for u=1:num_users
         dcg = cumsum((2.^pred - 1) ./discount);
         ndcg = dcg ./ idcg;
         if k > length(ndcg)
-            ndcg = [ndcg; repmat(ndcg(end), k-length(ndcg),1)];
+            ndcg = [ndcg; repmat(ndcg(end), k+1-length(ndcg),1)];
         else
             ndcg = [ndcg(1:k);ndcg(end)];
         end

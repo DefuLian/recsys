@@ -57,6 +57,8 @@ metric2 = rating_recommend(@(mat) dmf(mat, 'K', 32, 'alpha',0,'beta',0, 'rho',0 
 metric = evaluate_rating(Testdata, B, D, 10);
 metric3 = evaluate_rating(Testdata, B, D, 10);
 [B,D] = bccf(Traindata, 'K', 32, 'max_iter',10, 'lambda',0.1, 'test', Testdata);
+[B,D] = ch(Traindata, 'K', 32, 'max_iter',100);
+[B,D] = DCF(Traindata, 'K', 32, 'max_iter',100, 'alpha',0.1, 'beta',0.1);
 %%
 [summary, detail, time]=item_recommend(@(mat) dmf(mat, 'K',32, 'alpha',0,'beta',0, 'rho',0, 'init',true), Traindata+Testdata, 'test_ratio',0.2, 'times',5);
 [summary, detail, time]=item_recommend(@(mat) dmf(mat, 'K',32, 'alpha',0,'beta',0, 'rho',0, 'init',true), Traindata+Testdata, 'folds',5);

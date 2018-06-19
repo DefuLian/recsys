@@ -1,5 +1,6 @@
 function [B,D] = bccf(R, varargin)
 [opt.lambda, max_iter, k, test, debug] = process_options(varargin, 'lambda', 0.01, 'max_iter', 10, 'K', 20, 'test', [], 'debug',true);
+fprintf('bccf (K=%d, max_iter=%d, lambda=%f)\n', k, max_iter, opt.lambda);
 [m,n] = size(R);
 [I,J,V]=find(R);
 V = (V - min(V)) ./ (max(V) - min(V));
@@ -13,8 +14,8 @@ loss0 = 0;
 while ~converge
     B = optimize_(Rt, D, B, opt);
     D = optimize_(R, B, D, opt);
+    loss = loss_();
     if debug
-        loss = loss_();
         fprintf('Iteration=%3d of all optimization, loss=%.1f,', it, loss);
         if ~isempty(test)
             metric = evaluate_rating(test, B, D, 10);

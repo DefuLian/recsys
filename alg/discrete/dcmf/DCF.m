@@ -1,6 +1,7 @@
-function [B,D,B1,D1,X,Y] = DCF(S, r, alpha, beta, option)
+function [B,D,B1,D1,X,Y] = DCF(S, varargin)
+[r, alpha, beta, maxItr, Init, debug] = process_options(varargin, 'K', 20, 'alpha', 0, 'beta', 0, 'max_iter', 20,...
+    'init', true, 'debug', false);
 %DCF: Dicrete Collaborative Filtering described in Algorithm 1.
-
 %Input:
 %maxS: max rating score
 %minS: min rating score
@@ -30,7 +31,7 @@ function [B,D,B1,D1,X,Y] = DCF(S, r, alpha, beta, option)
 
 %Version: 1.0
 %Written by Hanwang Zhang (hanwangzhang AT gmail.com)
-
+fprintf('DCF (K=%d, max_iter=%d, alpha=%f, beta=%f)\n', r, maxItr, alpha, beta);
 ST = S';
 IDX = (S~=0);
 IDXT = IDX';
@@ -40,32 +41,15 @@ minS = min(S(S>0));
 converge = false;
 it = 1;
 
-if isfield(option,'maxItr')
-    maxItr = option.maxItr;
-else
-    maxItr = 20;
-end
-
-if isfield(option,'maxItr2')
-    maxItr2 = option.maxItr2;
-else
-    maxItr2 = 5;
-end
-
-if isfield(option, 'Init')
-   Init = option.Init;
-else
-   Init = 1;
-end
+maxItr2 = 5;
 
 if Init
-   if (isfield(option,'B0') &&  isfield(option,'D0') && isfield(option,'X0') && isfield(option,'Y0'))
-       B0 = option.B0; D0 = option.D0; X0 = option.X0; Y0 = option.Y0;
-   else
-       [U,V,X0,Y0] = DCFinit(S, r, alpha, beta, option);
-       B0 = sign(U); B0(B0 == 0) = 1;
-       D0 = sign(V); D0(D0 == 0) = 1;
-   end
+   %if (isfield(option,'B0') &&  isfield(option,'D0') && isfield(option,'X0') && isfield(option,'Y0'))
+   %    B0 = option.B0; D0 = option.D0; X0 = option.X0; Y0 = option.Y0;
+   %else
+   [U,V,X0,Y0] = DCFinit(S, r, alpha, beta, []);
+   B0 = sign(U); B0(B0 == 0) = 1;
+   D0 = sign(V); D0(D0 == 0) = 1;
 else
     U = rand(r,m);
     V = rand(r,n);
@@ -75,11 +59,6 @@ else
     Y0 = UpdateSVD(D0); 
 end
 
-if isfield(option,'debug')
-    debug = option.debug;
-else
-    debug = false;
-end
 
 B1 = B0;
 D1 = D0;
@@ -130,6 +109,7 @@ while ~converge
     it = it+1;
     
 end
+B=B';D=D';
 
 end
 

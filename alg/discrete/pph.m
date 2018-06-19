@@ -2,6 +2,7 @@ function [B, D] = pph(R, varargin )
 %Preference Preserving Hashing for Efficient Recommendation
 %   
 [opt.lambda, max_iter, k, test, debug] = process_options(varargin, 'lambda', 0.01, 'max_iter', 10, 'K', 20, 'test', [], 'debug',true);
+fprintf('pph (K=%d, max_iter=%d, lambda=%f)\n', k, max_iter, opt.lambda);
 [m,n] = size(R);
 Rt = R';
 rng(200);
@@ -13,8 +14,8 @@ loss0 = 0;
 while ~converge
     B = optimize_(Rt, D, B, opt);
     D = optimize_(R, B, D, opt);
+    loss = loss_();
     if debug
-        loss = loss_();
         fprintf('Iteration=%3d of all optimization, loss=%.1f,', it, loss);
         if ~isempty(test)
             metric = evaluate_rating(test, B, D, 10);
@@ -22,7 +23,7 @@ while ~converge
         end
         fprintf('\n')
     end
-    if it >= max_iter || abs(loss0-loss)<1e-4 * loss || abs(loss0-loss)<1
+    if it >= max_iter || abs(loss0-loss)<1e-6 * loss || abs(loss0-loss)<1
         converge = true;
     end
     it = it + 1;
