@@ -72,7 +72,7 @@ while ~converge
     V0 = V;
     X0 = X;
     Y0 = Y;
-    for i = 1:m
+    parfor i = 1:m
         Vi = V(:,IDXT(:,i));
         Si = nonzeros(ST(:,i));
         if isempty(Si)
@@ -85,7 +85,7 @@ while ~converge
         L = Vi*Si+alpha*X(:,i);
         U(:,i) = Q\L;
     end
-    for j = 1:n
+    parfor j = 1:n
         Uj = U(:,IDX(:,j));
         Sj = nonzeros(S(:,j));
         if isempty(Sj)

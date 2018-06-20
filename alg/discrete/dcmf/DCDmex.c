@@ -53,6 +53,6 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[]) {
             converge = true;
         it ++;
     }
-    mexPrintf("\n");
+    /*mexPrintf("\n");*/
 }
     

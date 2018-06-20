@@ -41,28 +41,28 @@ end
 
 function B = optimize_(Rt, D, B, opt)
 m = size(Rt, 2);
-for u=1:m
+parfor u=1:m
     r = Rt(:,u);
     b = B(u,:)';
     idx = r~=0;
     Du = D(idx,:);
     ru = full(r(idx)) - opt.rmax/2;
-    opt.H = 2 * (Du' * Du);
-    opt.g = @(x) 2 * (Du' * (Du * x)) - 2 * (Du' * ru);
-    opt.f = @(x) sum((ru - Du * x).^2);
+    H = 2 * (Du' * Du);
+    g = @(x) 2 * (Du' * (Du * x)) - 2 * (Du' * ru);
+    f = @(x) sum((ru - Du * x).^2);
     options = optimoptions('fminunc','Algorithm','trust-region', ...
         'SpecifyObjectiveGradient',true,'HessianFcn','objective','Display','off');
-    B(u,:) = fminunc(@(x) fun(x,opt), b, options);
+    B(u,:) = fminunc(@(x) fun(x,H,g,f, opt), b, options);
 end
 end
 
-function [f,g,H] = fun(b, opt)
+function [f,g,H] = fun(b, H1, g1, f1, opt)
 % d: kx1 vector
     k = length(b);
     v = norm(b)^2 - opt.rmax/2;
-    f = opt.lambda * v^2 + opt.f(b);
-    g = 4*opt.lambda* v * b + opt.g(b);
-    H = 4*opt.lambda*(v*eye(k) + 2 * (b * b')) + opt.H;
+    f = opt.lambda * v^2 + f1(b);
+    g = 4*opt.lambda* v * b + g1(b);
+    H = 4*opt.lambda*(v*eye(k) + 2 * (b * b')) + H1;
 end
 
 function [B,D] = rounding(B,D)
