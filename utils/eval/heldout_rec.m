@@ -71,7 +71,7 @@ else
         %field_std = sqrt(field(2,:)./times - field_mean .* field_mean);
         eval_summary.(fieldname) = [mean(field,1); std(field,0,1)];
     end
-    elapsed = mean(elapsed);
+    elapsed = mean(elapsed, 1);
 end
 
 end

@@ -56,6 +56,6 @@ for f=1:length(fns)
     %field_std = sqrt(field(2,:)./folds - field_mean .* field_mean);
     eval_summary.(fieldname) = [mean(field,1); std(field,0,1)];
 end
-elapsed = mean(elapsed);
+elapsed = mean(elapsed,1);
 end
 

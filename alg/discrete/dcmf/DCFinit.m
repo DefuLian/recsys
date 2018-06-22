@@ -56,7 +56,7 @@ end
 if isfield(option,'debug')
     debug = option.debug;
 else
-    debug = true;
+    debug = false;
 end
 converge = false;
 it = 1;

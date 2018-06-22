@@ -18,7 +18,7 @@ while ~converge
     if debug
         fprintf('Iteration=%3d of all optimization, loss=%.1f\n', it, loss);
     end
-    if it >= max_iter || abs(loss-loss0)<1e-6*loss || abs(loss0-loss)<1
+    if it >= max_iter || abs(loss0-loss)<1
         converge = true;
     end
     it = it + 1;
