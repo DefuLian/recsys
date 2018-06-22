@@ -1,13 +1,14 @@
 %dir = 'C:/Users/liand/Desktop/code/dataset';
-parpool('local',5);
-addpath(genpath('/home/ldf/code/recsys'))
+%parpool('local',6);
+addpath(genpath('~/code/recsys'))
 dir = '~/data';
 K = 64; %max_iter = 20;
-
+dataset = 'ml100kdata';
 %dataset = 'ml10Mdata';
-dataset = 'yelpdata';
+%dataset = 'yelpdata';
+%dataset = 'netflixdata';
 load(sprintf('%s/%s.mat', dir , dataset))
-if ~exist(data,'var')
+if ~exist('data','var')
     Traindata(Testdata>0)=0;
     data = Traindata + Testdata;
 end
@@ -23,5 +24,5 @@ for i=length(algs):-1:1
 end
 save(sprintf('%s/%s_result.mat',dir, dataset), 'result');
 
-delete(gcp)
-exit
+%delete(gcp)
+%exit

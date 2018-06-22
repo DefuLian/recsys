@@ -1,43 +1,33 @@
 function [opt_para, para_all, result, times] = hyperp_search(alg_func, metric_func, varargin)
 [mode, opt] = process_options(varargin, 'mode', 'grid');
 if strcmpi(mode, 'grid')
-    [opt_para, para_all, result, times] = grid_search(alg_func, metric_func, opt{:});
+    [opt_para, para_all, result, times] = parallel_grid_search(alg_func, metric_func, opt{:});
 elseif strcmpi(mode, 'seq')
-    [opt_para, para_all, result, times] = seq_search(alg_func, metric_func, opt{:});
+    [opt_para, para_all, result, times] = parallel_seq_search(alg_func, metric_func, opt{:});
 else
     error('unsupported mode')
 end
 end
-function [opt_para, para_all, result, times] = seq_search(alg_func, metric_func, varargin)
-num = length(varargin)/2;
-opt_para = [varargin(1:2:end);num2cell(zeros(1,num))];
-opt_para = struct(opt_para{:});
-total_ele = sum(cellfun(@length, varargin(2:2:end)));
-para_all = zeros(total_ele, num);
+function [opt_para, para_all, result, times] = parallel_grid_search(alg_func, metric_func, varargin)
+names = varargin(1:2:length(varargin));
+ranges = varargin(2:2:length(varargin));
+total_ele = prod(cellfun(@(c) length(c), ranges));
+[Ind{1:length(ranges)}] = ndgrid(ranges{:});
+Indmat = cell2mat(cellfun(@(mat) mat(:), Ind, 'UniformOutput', false));
+nn = cell(total_ele,1); [nn{:}]=deal(names);
+paras = cellfun(@(x,y) [y;num2cell(x)], num2cell(Indmat,2), nn, 'UniformOutput', false);
+para_all = cell(total_ele, length(names)*2);
+for i=1:total_ele
+    para_all(i,:) = paras{i}(:);
+end
 metrics = cell(total_ele, 1);
 times = zeros(total_ele, 2);
-max_metric = 0;
-iter_ele = 1;
-for i=1:num
-     name = varargin{2*i-1}; values = varargin{2*i};
-     best_para = 0;
-     for v = values
-         opt_para.(name) = v;
-         para_all(iter_ele,:) = struct2array(opt_para);
-         para = [fieldnames(opt_para),struct2cell(opt_para)]';
-         [metric,~,times(iter_ele,:)] = alg_func(para{:});
-         cur_metric = metric_func(metric);
-         metrics{iter_ele} = metric;
-         if max_metric < cur_metric
-            best_para = v;
-            max_metric = cur_metric;
-         end
-         iter_ele = iter_ele + 1;
-     end
-     opt_para.(name) = best_para;
+parfor it =1:total_ele
+    [metrics{it}, ~, times(it,:)] = alg_func(para_all{it,:});
 end
-opt_para = [fieldnames(opt_para),struct2cell(opt_para)]';
-opt_para = opt_para(:);
+[~, idx] = max(cellfun(@(x) metric_func(x), metrics));
+opt_para = para_all(idx,:);
+
 metrics_array = [metrics{:}];
 result = struct();
 fns = fieldnames(metrics{1});
@@ -47,32 +37,36 @@ for f=1:length(fns)
 end
 
 end
-function [opt_para, para_all, result, times] = grid_search(alg_func, metric_func, varargin)
-names = varargin(1:2:length(varargin));
-ranges = varargin(2:2:length(varargin));
-total_ele = prod(cellfun(@(c) length(c), ranges));
-[Ind{1:length(ranges)}] = ndgrid(ranges{:});
-Indmat = cell2mat(cellfun(@(mat) mat(:), Ind, 'UniformOutput', false));
-max_metric = 0;
-para_all = zeros(total_ele, length(names));
+
+function [opt_para, para_all, result, times] = parallel_seq_search(alg_func, metric_func, varargin)
+num = length(varargin)/2;
+opt_para = [varargin(1:2:end);num2cell(zeros(1,num))];
+opt_para = struct(opt_para{:});
+total_ele = sum(cellfun(@length, varargin(2:2:end)));
+para_all = cell(total_ele, num*2);
 metrics = cell(total_ele, 1);
 times = zeros(total_ele, 2);
-for iter_ele=1:total_ele
-    val = Indmat(iter_ele,:);
-    para = cell(length(names)*2, 1);
-    for n=1:length(names)
-        para((2*n-1):(2*n)) = {names{n}, val(n)};
-    end
-    [metric, ~, times(iter_ele,:)] = alg_func(para{:});
-    cur_metric = metric_func(metric);
-    para_all(iter_ele,:) = val;
-    metrics{iter_ele} = metric;
-    if max_metric < cur_metric
-        opt_para = para;
-        max_metric = cur_metric;
-    end
+max_metric = 0;
+start = 0;
+for i=1:num
+     name = varargin{2*i-1}; values = varargin{2*i};
+     for j = 1:length(values)
+         opt_para.(name) = values(j);
+         para = [fieldnames(opt_para),struct2cell(opt_para)]';
+         para_all(j+start,:) = para(:);
+     end
+     parfor j = 1:length(values)
+         [metrics{j+start},~,times(j+start,:)] = alg_func(para_all{j+start,:});
+     end
+     [max_m,idx] = max(cellfun(@(m) metric_func(m), metrics((start+1):(start+length(values)))));
+     if max_m > max_metric
+         opt_para.(name) = values(idx);
+         max_metric = max_m;
+     end
+     start = start + length(values);
 end
-
+opt_para = [fieldnames(opt_para),struct2cell(opt_para)]';
+opt_para = opt_para(:);
 metrics_array = [metrics{:}];
 result = struct();
 fns = fieldnames(metrics{1});

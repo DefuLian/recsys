@@ -41,7 +41,7 @@ end
 
 function B = optimize_(Rt, D, B, opt)
 m = size(Rt, 2);
-parfor u=1:m
+for u=1:m
     r = Rt(:,u);
     b = B(u,:)';
     idx = r~=0;

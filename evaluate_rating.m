@@ -31,5 +31,5 @@ for u=1:num_users
     end
 end
 ndcg_all = ndcg_all(user_count>0,:);
-metric = struct('ndcg', mean(ndcg_all(:,1:k)), 'rmse', rmse, 'mae', mae, 'ndcgri', mean(ndcg_all(:,end)));
+metric = struct('rating_ndcg', mean(ndcg_all(:,1:k)), 'rating_rmse', rmse, 'rating_mae', mae, 'rating_ndcgri', mean(ndcg_all(:,end)));
 end

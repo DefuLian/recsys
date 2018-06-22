@@ -78,7 +78,7 @@ Y = Y0;
 while ~converge
     B0 = B;
     D0 = D;
-    parfor i = 1:m
+    for i = 1:m
         %B(:,i) = DCD(D(:,IDX(i,:)),B(:,i),ScaleScore(full(S(i,IDX(i,:))'),r,maxS,minS), alpha*X(:,i),maxItr2);
         %B(:,i) = DCD(D(:,IDX(i,:)),B(:,i),ScaleScore(nonzeros(ST(:,i)),r,maxS,minS), alpha*X(:,i),maxItr2);
         d = D(:,IDXT(:,i));  %select volumns(logic of IDXT == 1)   d-(r,volumns)
@@ -86,7 +86,7 @@ while ~converge
         DCDmex(b,d*d',d*ScaleScore(nonzeros(ST(:,i)),r,maxS,minS), alpha*X(:,i),maxItr2);
         B(:,i) = b;
     end
-    parfor j = 1:n
+    for j = 1:n
         b = B(:,IDX(:,j));
         d = D(:,j);
         DCDmex(d,b*b',b*ScaleScore(nonzeros(S(:,j)),r,maxS,minS), beta*Y(:,j),maxItr2);

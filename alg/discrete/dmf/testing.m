@@ -47,6 +47,7 @@ f(xx)
 f(xstar)
 %%
 load C:/Users/liand/Desktop/code/dataset/ml100kdata.mat;
+load ~/data/ml100kdata.mat
 [B,D] = dmf(Traindata, 'K', 100, 'alpha',0,'beta',0);
 [B,D] = dmf(+(Traindata>4), 'K', 32, 'alpha',0,'beta',0, 'rho',0 ,'islogit',true,'alg','ccd','max_iter',1,'init',true);
 [B1,D1] = dmf(Traindata, 'K', 32, 'alpha',0,'beta',0, 'rho',0 ,'islogit',false,'alg','bcd','max_iter',20,'init',true, 'debug',true, 'test', Testdata);
@@ -60,14 +61,14 @@ metric3 = evaluate_rating(Testdata, B, D, 10);
 [B,D] = ch(Traindata, 'K', 32, 'max_iter',100);
 [B,D] = DCF(Traindata, 'K', 32, 'max_iter',100, 'alpha',0.1, 'beta',0.1);
 %%
-[summary, detail, time]=item_recommend(@(mat) dmf(mat, 'K',32, 'alpha',0,'beta',0, 'rho',0, 'init',true), Traindata+Testdata, 'test_ratio',0.2, 'times',5);
+[summary1, detail1, time1]=rating_recommend(@(mat) dmf(mat, 'K',32, 'alpha',0,'beta',0, 'rho',0, 'init',true), Traindata+Testdata, 'test_ratio',0.2, 'times',5);
 [summary, detail, time]=item_recommend(@(mat) dmf(mat, 'K',32, 'alpha',0,'beta',0, 'rho',0, 'init',true), Traindata+Testdata, 'folds',5);
 
-[a,b,c,d] = hyperp_search(...
+[a1,b1,c1,d1] = hyperp_search(...
     @(varargin) item_recommend(@(mat) dmf(mat, 'K',32, 'rho',0, 'init',true, varargin{:}), Traindata+Testdata, 'test_ratio',0.2), ...
-    @(metric) metric.recall(1,end), 'alpha', [0.001,0.01], 'beta',[1,2,3]);
-[a,b,c,d,e] = running(@(mat,varargin) dmf(mat, 'K',32, 'rho',0, 'init',true, varargin{:}), ...
-    Traindata+Testdata, 'alpha', [0.001,0.01], 'beta',[1,2,3]);
+    @(metric) metric.item_recall(1,end), 'alpha', [0.001,0.01], 'beta',[0.01,0.1,1], 'mode','seq');
+[a,b,c,d,e,f] = running(@(mat,varargin) dmf(mat, 'K',32, 'rho',0, 'init',true, varargin{:}), ...
+    Traindata+Testdata, 'alpha', [0.001,0.01], 'beta',[1,2,3], 'rating', true);
 
 
 %%

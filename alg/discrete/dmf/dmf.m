@@ -21,7 +21,7 @@ if ~islogit && ~init
     R = scale_matrix(R, k);
 end
 [m, n]=size(R);
-%rng(10);
+rng(10);
 if isempty(B)
     B = randn(m,k)*0.1; 
     if ~init
