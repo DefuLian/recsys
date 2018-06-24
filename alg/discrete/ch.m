@@ -1,7 +1,6 @@
 function [B,D]= ch(R,varargin)
 [max_iter, k, debug] = process_options(varargin, 'max_iter', 20, 'K', 20, 'debug', true);
-fprintf('ch (K=%d, max_iter=%d)\n', k, max_iter);
-
+print_info();
 [m,n] = size(R);
 [I,J,V]=find(R);
 V = (V - min(V)) ./ (max(V) - min(V));
@@ -25,9 +24,12 @@ while ~converge
     loss0 = loss;
 end
 [B,D] = rounding(B,D);
-    function v = loss_()
-        v = sum(sum(R.*R)) - 2* sum(sum(B .* (R*D))) + m*n*k;
-    end
+function print_info()
+    fprintf('ch (K=%d, max_iter=%d)\n', k, max_iter);
+end
+function v = loss_()
+    v = sum(sum(R.*R)) - 2* sum(sum(B .* (R*D))) + m*n*k;
+end
 end
 function [B,D] = rounding(B,D)
 B = 2*(B>0)-1;

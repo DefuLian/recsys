@@ -1,7 +1,8 @@
-function [x, l] = bqp(x_init, A, b, varargin)
-[max_iter, bsize, alg] = process_options(varargin, 'max_iter', 500,'blocksize', 32, 'alg', 'bcd');
+function [x, l] = bqp(x_init, A, b, alg, max_iter, bsize)
+%function [x, l] = bqp(x_init, A, b, varargin)
+%[max_iter, bsize, alg] = process_options(varargin, 'max_iter', 500,'blocksize', 32, 'alg', 'bcd');
 k = size(A,1);
-assert(issymmetric(A), 'matrix A should be sysmmetric');
+%assert(issymmetric(A), 'matrix A should be sysmmetric');
 if strcmpi(alg, 'ccd')
     [x, l] = ccd(x_init, A, b, max_iter);
 elseif strcmpi(alg, 'svr')
@@ -76,7 +77,8 @@ while(~convergent)
     end
     iter = iter + 1;
 end
-l = dot(x, A*x) - 2* dot(b, x);
+%l = dot(x, A*x) - 2* dot(b, x);
+l = sum(x .* (A*x)) - 2* sum(b.* x);
 end
 function [x,l] = bqp_small(A, b)
 %%% binary quadratic problem: min x' A x - 2 b' x, s.t. x in {+1,-1}^k
@@ -94,5 +96,6 @@ x = x(1:k) * t;
 end
 function [x,l] = ccd(x, A, b, max_iter)
 x = ccd_bqp_mex(x, A, b, max_iter);
-l = dot(x, A*x) - 2* dot(b, x);
+%l = dot(x, A*x) - 2* dot(b, x);
+l = sum(x .* (A*x)) - 2* sum(b.* x);
 end

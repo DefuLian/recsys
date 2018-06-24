@@ -13,10 +13,21 @@ function [B, D] = dmf(R, varargin)
 %%% rho regularization coefficient for interaction/implicit regularization
 %%% alpha regularization coefficient for balanced condition
 %%% beta  regularization coefficient for decorrelation condition
+[init, opt] = process_options(varargin,'init',false);
+if init
+    [B,D] = dmf_(R, 'init', true, opt{:});
+else
+    [B0,D0] = dmf_(R, 'init', true, opt{:});
+    %B0 = 2*(B0>0) - 1; D0 = 2*(D0>0) - 1;
+    [B,D] = dmf_(R, 'B0', B0, 'D0', D0, 'init', false, opt{:});
+end
+end
 
+function [B, D] = dmf_(R, varargin)
 [k, max_iter, debug, islogit, alpha, beta, rho, alg, bsize, init, B, D, test] = process_options(varargin, 'K', 64, 'max_iter', 10, 'debug', true, ...
     'islogit', false, 'alpha',0.01, 'beta', 0.01, 'rho', 0.01, 'alg', 'ccd','blocksize',32, 'init', false,...
     'B0',[], 'D0',[], 'test',[]);
+print_info();
 if ~islogit && ~init
     R = scale_matrix(R, k);
 end
@@ -53,13 +64,12 @@ while ~converge
     B = optimize(Rt, D, B, DtD, P_b, P_d, opt);
     BtB = B'*B;
     D = optimize(R,  B, D, BtB, Q_b, Q_d, opt);
+    loss = loss_();
     if debug
-        loss = loss_(R, B, D, opt) + opt.alpha * (norm(B-P_b,'fro')^2 + norm(D-Q_b,'fro')^2) ...
-            + opt.beta*(norm(B-P_d,'fro')^2 +norm(D-Q_d,'fro')^2);
         fprintf('Iteration=%3d of all optimization, loss=%.1f,', iter-1, loss);
         if ~isempty(test)
             metric = evaluate_rating(test,B,D,10);
-            fprintf('ndcg@1=%.3f', metric.ndcg(1));
+            fprintf('ndcg@1=%.3f', metric.rating_ndcg(1));
         end
         fprintf('\n')
     end
@@ -67,6 +77,38 @@ while ~converge
         converge = true;
     end
     iter = iter + 1;
+end
+function print_info()
+    if init
+        if islogit
+            fprintf('dmf_logit_init(K=%d, max_iter=%d, rho=%f, alpha=%f, beta=%f)\n', k, max_iter, rho, alpha, beta);
+        else
+            fprintf('dmf_init(K=%d, max_iter=%d, rho=%f, alpha=%f, beta=%f)\n', k, max_iter, rho, alpha, beta);
+        end
+    else
+        if islogit
+            fprintf('dmf_logit(K=%d, max_iter=%d, rho=%f, alpha=%f, beta=%f)\n', k, max_iter, rho, alpha, beta);
+        else
+            fprintf('dmf(K=%d, max_iter=%d, rho=%f, alpha=%f, beta=%f)\n', k, max_iter, rho, alpha, beta);
+        end
+    end
+end
+function val = loss_()
+    val = 0;
+    for u=1:m
+        r = Rt(:,u);
+        idx = r ~= 0;
+        r_ = D(idx, :) * B(u,:)';
+        r = r(idx);
+        if opt.islogit
+            val = val + sum(logitloss(r .* r_)) - opt.rho * sum(r_.^2);
+        else
+            val = val + sum((r - r_).^2) - opt.rho * sum(r_.^2);
+        end
+    end
+    val = val + opt.rho*sum(sum((B'*B) .* (D'*D)));
+    val = val + opt.alpha * (norm(B-P_b,'fro')^2 + norm(D-Q_b,'fro')^2);
+    val = val + opt.beta * (norm(B-P_d,'fro')^2 + norm(D-Q_d,'fro')^2);
 end
     
 end
@@ -91,10 +133,10 @@ for u=1:m
     r_ = Du * b.';
     if ~strcmpi(opt.alg,'ccd')
         if ~opt.islogit
-            H = opt.rho * DtD + (1 - opt.rho)*(Du.' * Du) + 0.001*diag(ones(length(b),1));
+            H = opt.rho * DtD + (1 - opt.rho)*(Du.' * Du) + (opt.alpha+opt.beta+1e-3)*diag(ones(length(b),1));
             f = Du.' * r(idx) + X(u,:).';
         else
-            H = opt.rho * DtD + Du.' * diag(lambda(r_) - opt.rho) * Du + 0.001*diag(ones(length(b),1));
+            H = opt.rho * DtD + Du.' * diag(lambda(r_) - opt.rho) * Du + (opt.alpha+opt.beta+1e-3)*diag(ones(length(b),1));
             f = 1/4 * Du.' * r(idx) + X(u,:).';
         end
         B(u,:) = H\f;
@@ -110,24 +152,26 @@ m = size(Rt, 2);
 lambda = @(x) tanh((abs(x)+1e-16)/2)./(abs(x)+1e-16)./4;
 X = opt.alpha*P_b + opt.beta*P_d;
 for u=1:m
-    b = B(u,:);
+    b = B(u,:)';
     r = Rt(:,u);
     idx = r ~= 0;
     Du = D(idx, :);
     if ~opt.islogit
         H = opt.rho * DtD + (1 - opt.rho) * (Du.' * Du);
         f = Du.' * r(idx) + X(u,:).';
-        B(u,:) = bqp(b.', (H+H')/2, f, 'alg', opt.alg, 'max_iter',max_iter, 'blocksize', opt.bsize);
+        %B(u,:) = bqp(b.', (H+H')/2, f, 'alg', opt.alg, 'max_iter',max_iter, 'blocksize', opt.bsize);
+        B(u,:) = bqp(b, (H+H')/2, f, opt.alg, max_iter, opt.bsize);
         %r_ = Du * b.';
         %B(u,:) = ccd_logit_mex(r(idx), Du, b, opt.rho * (DtD - Du'*Du), X(u,:), r_, opt.islogit, max_iter);
     else
         if ~strcmpi(opt.alg,'ccd')
-            r_ = Du * b.';
+            r_ = Du * b;
             H = opt.rho * DtD + Du.' * diag(lambda(r_) - opt.rho) * Du;
             f = 1/4 * Du.' * r(idx) + X(u,:).';
-            B(u,:) = bqp(b, (H+H')/2, f, 'alg', opt.alg, 'max_iter',max_iter, 'blocksize', opt.bsize);
+            %B(u,:) = bqp(b, (H+H')/2, f, 'alg', opt.alg, 'max_iter',max_iter, 'blocksize', opt.bsize);
+            B(u,:) = bqp(b, (H+H')/2, f, opt.alg, max_iter, opt.bsize);
         else
-            r_ = Du * b.';
+            r_ = Du * b;
             B(u,:) = ccd_logit_mex(full(r(idx)), Du, b, opt.rho * (DtD - Du'*Du), X(u,:), r_, opt.islogit, max_iter);
         end
     end
@@ -136,7 +180,7 @@ end
 
 function R = scale_matrix(R, s)
 maxS = max(max(R));
-minS = min(R(R>0));
+minS = min(R(R~=0));
 [I, J, V] = find(R);
 if maxS ~= minS
     VV = (V-minS)/(maxS-minS);
@@ -147,17 +191,6 @@ end
 R = sparse(I, J, VV, size(R,1), size(R,2));
 end
 
-
-function val = loss_(R, P, Q, opt)
-[I,J,r] = find(R);
-r_ = sum(P(I,:) .* Q(J,:), 2);
-if opt.islogit
-    val = sum(logitloss(r .* r_)) - opt.rho * sum(r_.^2);
-else
-    val = sum((r - r_).^2) - opt.rho * sum(r_.^2);
-end
-val = val + opt.rho*sum(sum((P'*P) .* (Q'*Q)));
-end
 function v = logitloss(v)
 if v>-500
     v = log(1+exp(-v));

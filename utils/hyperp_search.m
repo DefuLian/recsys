@@ -50,11 +50,13 @@ max_metric = 0;
 start = 0;
 for i=1:num
      name = varargin{2*i-1}; values = varargin{2*i};
+     default_value = opt_para.(name);
      for j = 1:length(values)
          opt_para.(name) = values(j);
          para = [fieldnames(opt_para),struct2cell(opt_para)]';
          para_all(j+start,:) = para(:);
      end
+     opt_para.(name) = default_value;
      parfor j = 1:length(values)
          [metrics{j+start},~,times(j+start,:)] = alg_func(para_all{j+start,:});
      end

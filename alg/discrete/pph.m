@@ -2,7 +2,7 @@ function [B, D] = pph(R, varargin )
 %Preference Preserving Hashing for Efficient Recommendation
 %   
 [opt.lambda, max_iter, k, test, debug] = process_options(varargin, 'lambda', 0.01, 'max_iter', 10, 'K', 20, 'test', [], 'debug',true);
-fprintf('pph (K=%d, max_iter=%d, lambda=%f)\n', k, max_iter, opt.lambda);
+print_info();
 [m,n] = size(R);
 Rt = R';
 rng(200);
@@ -19,7 +19,7 @@ while ~converge
         fprintf('Iteration=%3d of all optimization, loss=%.1f,', it, loss);
         if ~isempty(test)
             metric = evaluate_rating(test, B, D, 10);
-            fprintf('ndcg@1=%.3f', metric.ndcg(1));
+            fprintf('ndcg@1=%.3f', metric.rating_ndcg(1));
         end
         fprintf('\n')
     end
@@ -30,10 +30,18 @@ while ~converge
     loss0 = loss;
 end
 [B,D] = rounding(B,D);
+function print_info()
+    fprintf('pph (K=%d, max_iter=%d, lambda=%f)\n', k, max_iter, opt.lambda);
+end
 function v = loss_()
-    [r_idx, c_idx, r] = find(R);
-    r_ = sum(B(r_idx,:) .* D(c_idx,:),2);
-    v = sum((r - opt.rmax/2 - r_).^2);
+    v = 0;
+    for u=1:m
+        r = Rt(:,u);
+        idx = r ~= 0;
+        r_ = D(idx, :) * B(u,:)';
+        r = r(idx);
+        v = v + sum((r - opt.rmax/2 - r_).^2);
+    end
     v = v + opt.lambda * sum((sum(B.^2, 2) - opt.rmax/2).^2);
     v = v + opt.lambda * sum((sum(D.^2, 2) - opt.rmax/2).^2);
 end
