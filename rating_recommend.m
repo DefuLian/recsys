@@ -30,6 +30,7 @@ if strcmp(option, 'output')
 end
 function metric = evaluate(tr,te,p,q)
     metric1 = evaluate_rating(te,p,q,cutoff_rating);
+    te(te<0) = 0; %% negative rating scores are ignored in testing.
     metric2 = evaluate_item(tr,te,p,q,topk,cutoff);
     names = [fieldnames(metric1); fieldnames(metric2)];
     metric = cell2struct([struct2cell(metric1); struct2cell(metric2)], names, 1);

@@ -19,8 +19,10 @@ for u=1:num_users
         n = user_count(u);
         discount = log2((1:n)'+1);
         pred = pred_col(u_start:u_end,3);
-        idcg = cumsum((2.^act - 1) ./ discount);
-        dcg = cumsum((2.^pred - 1) ./discount);
+        %idcg = cumsum((2.^act - 1) ./ discount);
+        idcg = cumsum(act ./ discount);
+        %dcg = cumsum((2.^pred - 1) ./discount);
+        dcg = cumsum(pred ./ discount);
         ndcg = dcg ./ idcg;
         if k > length(ndcg)
             ndcg = [ndcg; repmat(ndcg(end), k+1-length(ndcg),1)];

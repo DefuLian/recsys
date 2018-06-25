@@ -86,11 +86,16 @@ loss = sum((Xi * C) .* Xi, 2);
 data = Traindata+Testdata;
 
 d1 = @(mat) dmf(mat, 'K', 64, 'alpha',1e-4,'beta',0, 'rho',0.01 , 'max_iter',20);
-d2 = @(mat) DCF(mat, 'K', 64, 'alpha',1e-4, 'beta',1e-4, 'max_iter',20);
-
+d2 = @(mat) DCF(mat, 'K', 64, 'alpha',1e-4,'beta',1e-4, 'max_iter',20);
+d3 = @(mat) dmf(mat, 'K', 64, 'alpha',1e-4,'beta',0, 'rho',0.01 , 'max_iter',20, 'alg', 'bcd', 'blocksize',8);
+d4 = @(mat) dmf(mat, 'K', 64, 'alpha',1e-4,'beta',0, 'rho',0.01 , 'max_iter',20, 'islogit', true);
+d5 = @(mat) dmf(mat, 'K', 64, 'alpha',1e-4,'beta',0, 'rho',0.01 , 'max_iter',20, 'islogit', true, 'alg', 'bcd', 'blocksize',8);
 
 [summary1, detail1, time1]=rating_recommend(d1, data, 'test_ratio',0.2, 'times',1);
 [summary2, detail2, time2]=rating_recommend(d2, data, 'test_ratio',0.2, 'times',1);
+[summary3, detail3, time3]=rating_recommend(d3, data, 'test_ratio',0.2, 'times',1);
+[summary4, detail4, time4]=rating_recommend(d4, data, 'test_ratio',0.2, 'times',1);
+[summary5, detail5, time5]=rating_recommend(d5, data, 'test_ratio',0.2, 'times',1);
 
 [B1,D1] = dmf(Traindata, 'K', 32, 'alpha',0.1,'beta',0.1, 'rho',0.1,'alg', 'svr', 'debug',true);
 

@@ -131,18 +131,18 @@ for u=1:m
     idx = r ~= 0;
     Du = D(idx, :);
     r_ = Du * b.';
-    if ~strcmpi(opt.alg,'ccd')
-        if ~opt.islogit
-            H = opt.rho * DtD + (1 - opt.rho)*(Du.' * Du) + (opt.alpha+opt.beta+1e-3)*diag(ones(length(b),1));
-            f = Du.' * r(idx) + X(u,:).';
-        else
-            H = opt.rho * DtD + Du.' * diag(lambda(r_) - opt.rho) * Du + (opt.alpha+opt.beta+1e-3)*diag(ones(length(b),1));
-            f = 1/4 * Du.' * r(idx) + X(u,:).';
-        end
-        B(u,:) = H\f;
-    else
+    %if ~strcmpi(opt.alg,'ccd')
+    %    if ~opt.islogit
+    %        H = opt.rho * DtD + (1 - opt.rho)*(Du.' * Du) + (opt.alpha+opt.beta+1e-3)*diag(ones(length(b),1));
+    %        f = Du.' * r(idx) + X(u,:).';
+    %    else
+    %        H = opt.rho * DtD + Du.' * diag(lambda(r_) - opt.rho) * Du + (opt.alpha+opt.beta+1e-3)*diag(ones(length(b),1));
+    %        f = 1/4 * Du.' * r(idx) + X(u,:).';
+    %    end
+    %    B(u,:) = H\f;
+    %else
         B(u,:) = ccd_logit_mex(full(r(idx)), Du, b,  opt.rho * (DtD - Du'*Du), X(u,:), r_, opt.islogit, max_iter, opt.alpha+opt.beta+1e-3);
-    end
+    %end
    
 end
 end
