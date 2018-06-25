@@ -1,7 +1,9 @@
 function ndcg = compute_ndcg(test, mat_rank, cutoff)
 [M, N] = size(mat_rank);
-[user, ~, rank] = find(mat_rank);
-[~, ~, score] = find(test);
+[user, item, rank] = find(mat_rank);
+score = test(sub2ind([M,N], user, item));
+%assert(all(score>0))
+%[~, ~, score] = find(test);
 dcg_score = sparse(user, rank, score./log2(rank+1), M, N);
 dcg = full(cumsum(dcg_score(:,1:cutoff), 2));
 dcg = [dcg,full(sum(dcg_score, 2))];

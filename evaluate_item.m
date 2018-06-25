@@ -1,7 +1,7 @@
 function evalout = evaluate_item(train, test, P, Q, topk, cutoff)
 % user_count column vector storing how many entries in the test 
-test(train~=0) = 0;
 if nnz(test)>0
+    test(train~=0) = 0;
     user_count = sum(test~=0,2);
     idx = user_count > 0.0001; train = train(idx,:); test = test(idx,:); P = P(idx,:);
     if max(test(test~=0)) > min(test(test~=0)) + 1e-3
@@ -44,9 +44,9 @@ function [ mat, user_count, cand_count, topkmat ] = Predict(test, train, U, V, t
 %   has action on corresponding item; E: training rating matrix, sharing
 %   similar meaning to R.
 %   users(i) has one item with ranks(i)
-if size(test, 2)==3 && sum(test(:,3)==0) > sum(test(:,3)~=0)
-    [ mat, user_count, cand_count ] = Predict_Tuple(test, train, U, V);
-else
+%if size(test, 2)==3 && sum(test(:,3)==0) > sum(test(:,3)~=0)
+%    [ mat, user_count, cand_count ] = Predict_Tuple(test, train, U, V);
+%else
     Et = train.';
     Rt = (test~=0).';
     Ut = U.';
@@ -106,7 +106,7 @@ else
     cand_count = cand_count.';
     user_count = user_count.';
 end
-end
+%end
 
 function [Utc, Vc] = split_latent_matrix(Ut,V)
 M = size(Ut,2);
