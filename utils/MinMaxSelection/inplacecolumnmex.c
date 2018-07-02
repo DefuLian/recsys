@@ -62,9 +62,7 @@ void mexFunction(int nlhs, mxArray *plhs[],
     mxFree(mxGetPr(plhs[0])); /* Free the data, normally Pr is NULL and
                                * this call does nothing */
 
-    /* Set the dimension as one column */
-    mxSetM(plhs[0], M);
-    mxSetN(plhs[0], 1);
+
     
     /* Inplace data pointer of A */
     Pr = mxGetPr(prhs[0]);
@@ -72,8 +70,13 @@ void mexFunction(int nlhs, mxArray *plhs[],
     /* Equivalent to doing this: mxSetPr(plhs[0], Pr); 
        but access directly to data pointer in order to by pass Matlab
        checking */
-    ((Internal_mxArray*)(plhs[0]))->data.number_array.pdata = Pr;
-      
+    /*((Internal_mxArray*)(plhs[0]))->data.number_array.pdata = Pr;*/
+    mxSetPr(plhs[0], Pr);
+    
+    /* Set the dimension as one column */
+    mxSetM(plhs[0], M);
+    mxSetN(plhs[0], 1);
+    
     return;
 
 } /* Gateway of INPLACECOLUMNMEX.c */

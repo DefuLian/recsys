@@ -10,7 +10,11 @@ end
 if rating_tune && rating
     metric_fun = @(metric) metric.rating_ndcg(1,1);
 else
-    metric_fun = @(metric) metric.item_ndcg(1,end);
+    if rating
+        metric_fun = @(metric) metric.item_ndcg_score(1,end);
+    else
+        metric_fun = @(metric) metric.item_ndcg(1,end);
+    end
 end
 no_tune = all(cellfun(@length, paras(2:2:end))==1);
 if ~no_tune

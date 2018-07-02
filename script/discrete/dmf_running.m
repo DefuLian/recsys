@@ -1,4 +1,4 @@
-parpool('local', 2);
+parpool('local', 6);
 addpath(genpath('~/code/recsys'))
 dir = '~/data';
 datasets = {'yelpdata', 'amazondata', 'ml10Mdata', 'netflixdata'};
@@ -6,7 +6,10 @@ datasets = {'yelpdata', 'amazondata', 'ml10Mdata', 'netflixdata'};
 alg = @(mat,varargin) dmf(mat, 'K', 64, 'max_iter',20, varargin{:});
 paras = {'rho',10.^(-6:0), 'alpha', 10.^(-4:2), 'beta',10.^(-4:2)};
 
-load(sprintf('%s/dmf_results.mat',dir));
+file_name = sprintf('%s/dmf_results(new_ndcg).mat',dir);
+if exist(file_name, 'file')
+    load(file_name);
+end
 if ~exist('result', 'var')
     result = cell(length(datasets),1);
 end
@@ -23,6 +26,6 @@ for i=1:length(datasets)
     end
     [outputs{1:6}] = running(alg, data, 'search_mode', 'seq', paras{:});
     result{i} = outputs;
-    save(sprintf('%s/dmf_results.mat',dir), 'result');
+    save(file_name, 'result');
 end
 exit

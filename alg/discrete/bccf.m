@@ -2,9 +2,11 @@ function [B,D] = bccf(R, varargin)
 [opt.lambda, max_iter, k, test, debug] = process_options(varargin, 'lambda', 0.01, 'max_iter', 10, 'K', 20, 'test', [], 'debug',true);
 print_info();
 [m,n] = size(R);
-[I,J,V]=find(R);
-V = (V - min(V)) ./ (max(V) - min(V));
-R = sparse(I,J,V,m,n);
+if max(R(R~=0)) > min(R(R~=0)) + 1e-3
+    [I,J,V]=find(R);
+    V = (V - min(V)) ./ (max(V) - min(V));
+    R = sparse(I,J,V,m,n);
+end
 Rt = R';
 rng(200);
 B = randn(m,k)*0.1; D = randn(n,k)*0.1;

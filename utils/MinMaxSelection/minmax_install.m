@@ -10,7 +10,7 @@ path = fileparts(thisfile);
 oldpath = cd(path);
 
 arch=computer('arch');
-mexopts = {'-v' '-O' ['-' arch]};
+mexopts = { '-O' ['-' arch]};
 % 64-bit platform
 if ~isempty(strfind(computer(),'64'))
     mexopts(end+1) = {'-largeArrayDims'};

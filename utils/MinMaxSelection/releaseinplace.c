@@ -36,8 +36,9 @@ void mexFunction(int nlhs, mxArray *plhs[],
     /* Equivalent to doing this:  mxSetPr(prhs[0], NULL); 
        but access directly to data pointer in order to by pass Matlab
        checking - Thanks to James Tursa */
-    ((Internal_mxArray*)(prhs[0]))->data.number_array.pdata = NULL;
-    ((Internal_mxArray*)(prhs[0]))->data.number_array.pimag_data = NULL; 
+    /*((Internal_mxArray*)(prhs[0]))->data.number_array.pdata = NULL;
+    ((Internal_mxArray*)(prhs[0]))->data.number_array.pimag_data = NULL; */
+    mxSetPr(prhs[0], NULL);
       
     return;
 

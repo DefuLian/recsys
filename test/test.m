@@ -120,3 +120,12 @@ assert(nnz(metric0.recall(:,1:10) ~= metric4.recall(:,1:10))==0)
 assert(nnz(metric0.recall(:,1:10) ~= metric5.recall(:,1:10))==0)
 assert(nnz(metric0.recall(:,1:10) ~= metric6.recall(:,1:10))==0)
 
+%%
+r = [1, 0, 1, 0, 0, 1, 1, 1];
+r = [3, 2, 3, 0, 0, 1, 2, 2, 3, 0];
+rank = 1:length(r);
+r = sparse(r);
+rank(r==0)=0;
+compute_ndcg(r,rank,length(r))
+compute_prec_recall(rank,nnz(r),length(r))
+

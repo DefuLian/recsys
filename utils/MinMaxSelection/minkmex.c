@@ -26,6 +26,7 @@
 
 #include "mex.h"
 #include "matrix.h"
+#include "string.h"
 
 /* Define correct type depending on platform */
 #if defined(_MSC_VER) || defined(__BORLANDC__)

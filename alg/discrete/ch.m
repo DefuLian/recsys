@@ -2,10 +2,11 @@ function [B,D]= ch(R,varargin)
 [max_iter, k, debug] = process_options(varargin, 'max_iter', 20, 'K', 20, 'debug', true);
 print_info();
 [m,n] = size(R);
-[I,J,V]=find(R);
-V = (V - min(V)) ./ (max(V) - min(V));
-R = sparse(I,J,V,m,n);
-[m,n] = size(R);
+if max(R(R~=0)) > min(R(R~=0)) + 1e-3
+    [I,J,V]=find(R);
+    V = (V - min(V)) ./ (max(V) - min(V));
+    R = sparse(I,J,V,m,n);
+end
 converge = false;
 B = randn(m, k)*0.1; D = randn(n, k)*0.1;
 it = 1;

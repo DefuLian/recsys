@@ -94,9 +94,10 @@ else
                 end
             else
                 for n=1:N
-                    cn = inplacecolumnmex(list,n); % inplace column
+                    %cn = inplacecolumnmex(list,n); % inplace column
+                    cn = list(:,n);
                     [res(:,n) loc(:,n)] = mexfun(cn,k);
-                    releaseinplace(cn);
+                    %releaseinplace(cn);
                     %[res(:,n) loc(:,n)] = mexfun(list(:,n),k);
                 end
             end
@@ -107,9 +108,10 @@ else
                 end
             else
                 for n=1:N
-                    cn = inplacecolumnmex(list,n); % inplace column
+                    %cn = inplacecolumnmex(list,n); % inplace column
+                    cn = list(:,n);
                     res(:,n) = mexfun(cn,k);
-                    releaseinplace(cn);
+                    %releaseinplace(cn);
                     %res(:,n) = mexfun(list(:,n),k);
                 end
             end
@@ -117,9 +119,9 @@ else
     catch
         % If something is wrong
         % It crashes if cn is not released properly
-        if exist('cn','var') && ~isempty(cn)
-            releaseinplace(cn);
-        end
+        %if exist('cn','var') && ~isempty(cn)
+        %    releaseinplace(cn);
+        %end
         % rethrow the error (likely memory)
         rethrow(lasterror);
     end
