@@ -4,11 +4,11 @@ if nnz(test)>0
     test(train~=0) = 0;
     user_count = sum(test~=0,2);
     idx = user_count > 0.0001; train = train(idx,:); test = test(idx,:); P = P(idx,:);
-    if max(test(test~=0)) > min(test(test~=0)) + 1e-3
-        evalout = compute_rating_metric(train, test, P, Q, topk, cutoff);
+    [mat_rank, ~, cand_count] = Predict(test, train, P, Q, topk);
+    if isexplit(test)
+        evalout = compute_rating_metric(test, mat_rank, cand_count, cutoff);
     else
-        [mat_rank, user_count, cand_count] = Predict(test, train, P, Q, topk);
-        evalout = compute_item_metric(mat_rank, user_count, cand_count, topk, cutoff);
+        evalout = compute_item_metric(test, mat_rank, cand_count, cutoff);
     end
 else
     if topk<=0
@@ -18,24 +18,6 @@ else
 end
 end
 
-function eval = compute_rating_metric(train, test, P, Q, topk, cutoff)
-% evalaute_item_like()
-avg_score = sum(test,2)./sum(test~=0,2); %std_score = sqrt(sum(test.^2, 2) ./ sum(test~=0,2) - avg_score); %avg_score = avg_score + 2*std_score;
-avg_score = min(avg_score, max(test,[],2)-1e-3);
-m = size(test,1); avg_matrix = spdiags(avg_score, 0, m, m) * (test~=0) ;
-[mat_rank, user_count, cand_count] = Predict(+(test>avg_matrix), train, P, Q, topk);
-eval_like = compute_item_metric(mat_rank, user_count, cand_count, topk, cutoff);
-
-% evalaute_item_view()
-[mat_rank, user_count, cand_count] = Predict(+(test~=0), train, P, Q, topk);
-eval_view = compute_item_metric(mat_rank, user_count, cand_count, topk, cutoff);
-
-names = [cellfun(@(x) sprintf('%s_like', x), fieldnames(eval_like), 'UniformOutput',false); ...
-    cellfun(@(x) sprintf('%s_view',x), fieldnames(eval_view), 'UniformOutput',false)];
-eval = cell2struct([struct2cell(eval_like); struct2cell(eval_view)], names, 1);
-% evaluate_item_score()
-eval.item_ndcg_score = compute_ndcg(test, mat_rank, cutoff);
-end
 
 function [ mat, user_count, cand_count, topkmat ] = Predict(test, train, U, V, topk )
 %Predict: Based user and item latent vector, predict items' rank for each

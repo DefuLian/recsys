@@ -7,7 +7,7 @@ function [ mat, user_count, cand_count ] = predict_tuple(topkmat, test, U, V, cu
 Vt = V.';
 I = topkmat(:,1);
 J = topkmat(:,2);
-Val = topkmat(:,3);
+%Val = topkmat(:,3);
 cand_count = tabulate(I); cand_count = cand_count(:,2);
 user_count = sum(test~=0, 2);
 cum_cand_count = [0;cumsum(cand_count)];
@@ -24,7 +24,7 @@ for u=1:length(cand_count)
     end
     r = test_t(:,u);
     cand_items = J(idx_start:idx_end);
-    pred = U(u,:) * Vt(:,cand_items) + Val(idx_start:idx_end)';
+    pred = U(u,:) * Vt(:,cand_items) ;%+ Val(idx_start:idx_end)';
     [~, idx] = maxk(pred, cutoff, 2, 'sorting', true);
     items = cand_items(idx);
     users = ones(length(items),1) * u;
