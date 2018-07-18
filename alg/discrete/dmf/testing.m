@@ -99,3 +99,8 @@ d5 = @(mat) dmf(mat, 'K', 64, 'alpha',1e-4,'beta',0, 'rho',0.01 , 'max_iter',20,
 
 [B1,D1] = dmf(Traindata, 'K', 32, 'alpha',0.1,'beta',0.1, 'rho',0.1,'alg', 'svr', 'debug',true);
 
+
+%%
+load ~/data/ml10Mdata.mat;
+alg = dmf('rho',0.0100,'alpha',1,'beta',0);
+

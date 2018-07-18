@@ -43,7 +43,7 @@ end
 %One can further normalize each vector to unit by using following codes:
 
 if bNorm
-   fea = NormalizeFea(fea2,0)'; 
+    fea = NormalizeFea(fea2, 'row', false)';
 end
 
 % fea is the final document-term matrix.

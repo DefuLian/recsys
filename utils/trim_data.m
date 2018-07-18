@@ -6,13 +6,13 @@ end
 cols = 1:N;
 rows = 1:M;
 while(true)
-    col_sum = sum(data>0);
+    col_sum = sum(data~=0);
     col_ind = col_sum>=count;
     if nnz(col_ind)>0
         cols = cols(col_ind);
         data = data(:,col_ind);
     end
-    row_sum = sum(data>0,2);
+    row_sum = sum(data~=0,2);
     row_ind = row_sum>=count;
     if nnz(row_ind)>0
         rows = rows(row_ind);
