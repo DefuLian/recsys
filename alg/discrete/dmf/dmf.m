@@ -68,8 +68,9 @@ while ~converge
     if debug
         fprintf('Iteration=%3d of all optimization, loss=%.1f,', iter-1, loss);
         if ~isempty(test)
-            metric = evaluate_rating(test,B,D,10);
-            fprintf('ndcg@1=%.3f', metric.rating_ndcg(1));
+            %metric = evaluate_rating(test,B,D,10);
+            metric = evaluate_item(R, test, B, D, 200, 200);
+            fprintf('recall@100=%.3f, recall@200=%.3f', metric.item_ndcg(1,3), metric.item_ndcg(1,5));
         end
         fprintf('\n')
     end

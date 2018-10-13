@@ -1,4 +1,4 @@
-function [phi, X, y] = psd_ip(L, varargin)
+function [phi, X, y, converge] = psd_ip(L, varargin)
 % solves: max trace(LX) s.t. X psd, diag(X) = b; b = ones(n,1)/4
 % min b'y s.t. Diag(y) - L psd, y unconstrained,
 % input: L ... symmetric matrix
@@ -8,7 +8,7 @@ function [phi, X, y] = psd_ip(L, varargin)
 % call: [phi, X, y] = psd_ip( L);
 [n, ~] = size(L); % problem size
 [verbose, b, digits, max_iter] = process_options(varargin, 'verbose', false,...
-    'b', ones(n, 1), 'precision', 3, 'max_iter', 200);
+    'b', ones(n, 1), 'precision', 6, 'max_iter', 200);
 %digits = 6; % 6 significant digits of phi
 %b = ones(n,1 )/4; % any b>0 works just as well
 X = diag(b); % initial primal matrix is pos. def.
@@ -23,15 +23,25 @@ end
 prev_gap = inf;
 %while abs(phi-psi) > max([1,abs(phi)]) * 10^(-digits)
 %while 
+converge = true;
 for iter = 1:max_iter
     cur_gap = abs(phi - psi);
     if cur_gap < 1.49*10^(-digits) || abs(cur_gap - prev_gap) < prev_gap * 1e-3
         break
     end
     prev_gap = cur_gap;
-    Zi = inv(Z+1e-8*eye(size(Z))); % inv(Z) is needed explicitly
+    if rcond(Z) < 1e-15
+        Zi = pinv(Z);
+    else
+        Zi = inv(Z); % inv(Z) is needed explicitly
+    end
     Zi = (Zi + Zi.')/2;
-    dy = (Zi .* X) \ (mu * diag(Zi) - b); % solve for dy
+    DY = (Zi .* X);
+    if rcond(DY) < 1e-15
+        dy = pinv(DY) * (mu * diag(Zi) - b);
+    else
+        dy = DY \ (mu * diag(Zi) - b); % solve for dy
+    end
     dX = -Zi * diag(dy) * X + mu * Zi - X; % back substitute for dX
     dX = (dX + dX.')/2; % symmetrize
     % line search on primal
@@ -39,7 +49,14 @@ for iter = 1:max_iter
     [~, posdef] = chol( X + alphap * dX ); % test if pos.def
     while posdef > 0
         alphap = alphap * .8;
+        if alphap < 1e-10
+            break
+        end
         [~, posdef] = chol( X + alphap * dX );
+    end
+    if posdef > 0
+        converge = false;
+        break;
     end
     if alphap < 1
         alphap = alphap * .95; 
@@ -50,7 +67,14 @@ for iter = 1:max_iter
     [~, posdef] = chol(Z + alphad * diag(dy));
     while posdef > 0
         alphad = alphad * .8;
+        if alphad < 1e-10
+            break;
+        end
         [~, posdef] = chol(Z + alphad * diag(dy));
+    end
+    if posdef > 0
+        converge = false;
+        break
     end
     if alphad < 1
         alphad = alphad * .95; 

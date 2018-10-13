@@ -111,11 +111,11 @@ function mat = multiply_cell(Utc, Vc)
 
 for i=1:length(Utc)
     if i ==1
-        %mat = Vc{i} * Utc{i};
-        mat = mult_real(Vc{i}, Utc{i}');
+        mat = Vc{i} * Utc{i};
+        %mat = mult_real(Vc{i}, Utc{i}');
     else
-        %mat = mat + Vc{i} * Utc{i};
-        mat = mat + mult_real(Vc{i}, Utc{i}');
+        mat = mat + Vc{i} * Utc{i};
+        %mat = mat + mult_real(Vc{i}, Utc{i}');
     end
 end
 end

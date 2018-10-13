@@ -66,6 +66,9 @@ while(~convergent)
         index = false(k,1); index(dim_index(bstart:bend)) = true;
         if bsize > 3
             x_new = bqp_small(A(index, index), b(index) - A(index, ~index) * x(~index));
+            if isempty(x_new)
+                x_new = ccd(x(index), A(index, index), b(index) - A(index, ~index) * x(~index), 1);
+            end
         else
             x_new = bqp_tiny(A(index, index), b(index) - A(index, ~index) * x(~index));
         end
@@ -86,13 +89,17 @@ function [x,l] = bqp_small(A, b)
 %%% l: the corresponding loss
 [k, ~] = size(A);
 C = [A, -b; -b', 0]; % cast to min x' C x, s.t. x in {+1,-1}^k+1
-[~, X, ~] = psd_ip(-C); % solve min tr(CX), st. rank(X)=1 and diag(X) = e (drop rank constraint)
-Xi = sign(mvnrnd(zeros(k+1,1), X, k));
-loss = sum((Xi * C) .* Xi, 2);
-[l, ind] = min(loss);
-x = Xi(ind,:);
-t = x(k+1);
-x = x(1:k) * t;
+[~, X, ~, converge] = psd_ip(-C); % solve min tr(CX), st. rank(X)=1 and diag(X) = e (drop rank constraint)
+if ~converge
+    x = [];
+else
+    Xi = sign(mvnrnd(zeros(k+1,1), X, k));
+    loss = sum((Xi * C) .* Xi, 2);
+    [l, ind] = min(loss);
+    x = Xi(ind,:);
+    t = x(k+1);
+    x = x(1:k) * t;
+end
 end
 function [x,l] = ccd(x, A, b, max_iter)
 x = ccd_bqp_mex(x, A, b, max_iter);
