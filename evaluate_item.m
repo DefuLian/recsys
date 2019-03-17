@@ -5,7 +5,7 @@ if nnz(test)>0
     user_count = sum(test~=0,2);
     idx = user_count > 0.0001; train = train(idx,:); test = test(idx,:); P = P(idx,:);
     [mat_rank, ~, cand_count] = Predict(test, train, P, Q, topk);
-    if isexplit(test)
+    if isexplict(test)
         evalout = compute_rating_metric(test, mat_rank, cand_count, cutoff);
     else
         evalout = compute_item_metric(test, mat_rank, cand_count, cutoff);
@@ -42,7 +42,7 @@ function [ mat, user_count, cand_count, topkmat ] = Predict(test, train, U, V, t
     %end
     [N, M] = size(Rt);
     cand_count = N - sum(Et ~= 0);
-    step = 1000;
+    step = 100;
     num_step = floor((M + step-1)/step);
     user_cell = cell(num_step, 1);
     rank_cell = cell(num_step, 1);
@@ -62,11 +62,12 @@ function [ mat, user_count, cand_count, topkmat ] = Predict(test, train, U, V, t
         subR_E = multiply_cell(subUc, Vc);
         subR_E(subE ~= 0) = -inf;
         if topk>0
-            [~, Index] = maxk(subR_E, topk);
+            [score, Index] = maxk(subR_E, topk);
             [val, I, J] = find(Index);
             rank = sparse(J, I, val, size(subR_E,1), size(subR_E,2));
             if nargout == 4
-                topk_cell{i} = [I + (i-1)*step, J, val];
+                %topk_cell{i} = [I + (i-1)*step, J, val];
+                topk_cell{i} = [I + (i-1)*step, J, score(:)];
             end
         else
             [~, Index] = sort(subR_E, 'descend');

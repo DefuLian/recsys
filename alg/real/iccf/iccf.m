@@ -4,12 +4,12 @@ function [P, Q, U, V, metric] = iccf(R, varargin)
 %rng(10)
 init_std = 0.01;
 [X, Y, alpha, test, max_iter, K, P, Q, reg_u, reg_i, is_item_fixed, is_user_fixed, ...
-    user_bias, item_bias, usr_w, item_w, k_verbose, pos_eval] = ...
+    user_bias, item_bias, usr_w, item_w, k_verbose] = ...
    process_options(varargin, 'X', zeros(M,0), 'Y', zeros(N,0), 'alpha', 30, 'test', [], 'max_iter', 20, 'K', 50, 'P', [], 'Q', [], ...
    'reg_u', 0.01, 'reg_i', 0.01, 'is_item_fixed', false, 'is_user_fixed', false, 'user_bias', false, 'item_bias', false,...
-   'usr_w', ones(M,1), 'item_w', ones(N,1), 'k-v', 5, 'pos_eval',200);
+   'usr_w', ones(M,1), 'item_w', ones(N,1), 'k-v', 5);
 
-fprintf('alpha=%d, K=%d, reg_u=%f, reg_i=%f\n', alpha, K, reg_u, reg_i);
+fprintf('iccf(alpha=%d, K=%d, reg_u=%f, reg_i=%f)\n', alpha, K, reg_u, reg_i);
 
 W = GetWeight(R, alpha);
 if(isempty(P))
@@ -53,16 +53,19 @@ for iter=1:max_iter
     end
     fprintf('Iteration=%d of all optimization, loss=%f', iter, fast_loss(R, W, P, Q, usr_w, item_w));
     if mod(iter, k_verbose) ==0 && (~isempty(test))
-        [prec, recall] = Evaluate(R, test, P, Q);
-        fprintf(',recall@%d=%f', pos_eval, recall(pos_eval));
+        metric = evaluate_item(R, test, P, Q, 200, 200);
+        if isexplict(test)
+            fprintf(',recall@50=%.3f, recall@100=%.3f', metric.item_recall_like(1,50), metric.item_recall_like(1,100));
+        else
+            fprintf(',recall@50=%.3f, recall@100=%.3f', metric.item_recall(1,50), metric.item_recall(1,100));
+        end
     end
     fprintf('\n');
 end
 if(~isempty(test))
     if mod(max_iter, k_verbose)~=0
-        [prec, recall] = Evaluate(R, test, P, Q);
+        metric = evaluate_item(R, test, P, Q, 200, 200);
     end
-    metric = struct('prec', prec, 'recall', recall);
 end
 end
 

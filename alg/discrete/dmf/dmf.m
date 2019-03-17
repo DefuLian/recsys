@@ -70,7 +70,11 @@ while ~converge
         if ~isempty(test)
             %metric = evaluate_rating(test,B,D,10);
             metric = evaluate_item(R, test, B, D, 200, 200);
-            fprintf('recall@100=%.3f, recall@200=%.3f', metric.item_ndcg(1,3), metric.item_ndcg(1,5));
+            if isexplict(test)
+                fprintf('recall@50=%.3f, recall@100=%.3f', metric.item_recall_like(1,50), metric.item_recall_like(1,100));
+            else
+                fprintf('recall@50=%.3f, recall@100=%.3f', metric.item_recall(1,50), metric.item_recall(1,100));
+            end
         end
         fprintf('\n')
     end
