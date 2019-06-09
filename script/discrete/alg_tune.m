@@ -1,31 +1,30 @@
-parpool('local',10);
-addpath(genpath('~/code/recsys'))
+parpool('local',1);
+addpath(genpath('~/software/recsys'))
 dir = '~/data';
 datasets = {'yelpdata', 'amazondata', 'ml10Mdata', 'netflixdata'};
-load ~/result/dmf_results(new_ndcg).mat
+load ~/result/tkde_dcf/dmf_results(new_ndcg).mat
 para = cellfun(@(x) x{3}, result, 'UniformOutput', false);
-clear('result');
+max_iter = 20;
 
 for iter=1:3
-    clear('Traindata');
-    clear('Testdata');
     clear('data');
     clear('result');
     dataset = datasets{iter};
     display(dataset)
     load(sprintf('%s/%s.mat', dir , dataset))
-    if ~exist('data', 'var')
-        data = Traindata+Testdata;
-    end
+    
     para_dmf = para{iter};
     [train, test] = split_matrix(data, 'un', 0.8);
-    alg{1} = @(mat) dmf(mat, 'K', 64, 'max_iter', 20, para_dmf{:});
-    alg{2} = @(mat) dmf(mat, 'K', 64, 'max_iter', 20, 'alg', 'bcd', 'blocksize', 8, para_dmf{:});
-    alg{3} = @(mat) dmf(mat, 'K', 64, 'max_iter', 20, 'alg', 'bcd', 'blocksize', 16, para_dmf{:});
-    alg{4} = @(mat) dmf(mat, 'K', 64, 'max_iter', 20, 'alg', 'bcd', 'blocksize', 32, para_dmf{:});
-    alg{5} = @(mat) dmf(mat, 'K', 64, 'max_iter', 20, 'alg', 'bcd', 'blocksize', 64, para_dmf{:});
+    alg{1} = @(mat) dmf(mat, 'K', 64, 'max_iter', max_iter, para_dmf{:});
+    for a=1:8
+        alg{a+1} = @(mat) dmf(mat, 'K', 64, 'max_iter', max_iter, 'alg', 'bcd', 'blocksize', 8*a, para_dmf{:});
+    end
+    
+    %alg{3} = @(mat) dmf(mat, 'K', 64, 'max_iter', max_iter, 'alg', 'bcd', 'blocksize', 16, para_dmf{:});
+    %alg{4} = @(mat) dmf(mat, 'K', 64, 'max_iter', max_iter, 'alg', 'bcd', 'blocksize', 32, para_dmf{:});
+    %alg{5} = @(mat) dmf(mat, 'K', 64, 'max_iter', max_iter, 'alg', 'bcd', 'blocksize', 64, para_dmf{:});
 
-    filename = sprintf('~/data/alg_tune_%s_results.mat', dataset);
+    filename = sprintf('~/result/tkde_dcf/alg_tune_%s_accurate.mat', dataset);
     if exist(filename, 'file')
         load(filename);
     end

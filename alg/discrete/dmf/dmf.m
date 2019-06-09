@@ -84,17 +84,22 @@ while ~converge
     iter = iter + 1;
 end
 function print_info()
+    if strcmpi(alg, 'ccd')
+        alg_name = alg;
+    else
+        alg_name = sprintf('%s+%d', alg, bsize);
+    end
     if init
         if islogit
-            fprintf('dmf_logit_init(K=%d, max_iter=%d, rho=%f, alpha=%f, beta=%f)\n', k, max_iter, rho, alpha, beta);
+            fprintf('dmf_logit_init(K=%d, max_iter=%d, rho=%f, alpha=%f, beta=%f, optalg=%s)\n', k, max_iter, rho, alpha, beta, alg_name);
         else
-            fprintf('dmf_init(K=%d, max_iter=%d, rho=%f, alpha=%f, beta=%f)\n', k, max_iter, rho, alpha, beta);
+            fprintf('dmf_init(K=%d, max_iter=%d, rho=%f, alpha=%f, beta=%f, optalg=%s)\n', k, max_iter, rho, alpha, beta, alg_name);
         end
     else
         if islogit
-            fprintf('dmf_logit(K=%d, max_iter=%d, rho=%f, alpha=%f, beta=%f)\n', k, max_iter, rho, alpha, beta);
+            fprintf('dmf_logit(K=%d, max_iter=%d, rho=%f, alpha=%f, beta=%f, optalg=%s)\n', k, max_iter, rho, alpha, beta, alg_name);
         else
-            fprintf('dmf(K=%d, max_iter=%d, rho=%f, alpha=%f, beta=%f)\n', k, max_iter, rho, alpha, beta);
+            fprintf('dmf(K=%d, max_iter=%d, rho=%f, alpha=%f, beta=%f, optalg=%s)\n', k, max_iter, rho, alpha, beta, alg_name);
         end
     end
 end

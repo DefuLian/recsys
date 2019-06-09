@@ -26,7 +26,7 @@ if ~isempty(test)
     end
 else
     % split mat and perform recommendation
-    rng(seed);
+    rng(seed,'twister');
     eval_detail = struct();
     metric_times = cell(times,1);
     tests = cell(times,1);

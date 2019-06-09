@@ -12,44 +12,35 @@ function [phi, X, y, converge] = psd_ip(L, varargin)
 %digits = 6; % 6 significant digits of phi
 %b = ones(n,1 )/4; % any b>0 works just as well
 X = diag(b); % initial primal matrix is pos. def.
-y = sum(abs(L)).' * 1.1; % initial y is chosen so that
+y = sum(abs(L))' * 1.1; % initial y is chosen so that
 Z = diag(y) - L; % initial dual slack Z is pos. def.
-phi = b.'* y; % initial dual
-psi = L(:).' * X(:); % and primal costs
-mu = Z(:).' * X(:) / (2*n); % initial complementarity
+phi = b'* y; % initial dual
+psi = L(:)' * X(:); % and primal costs
+mu = Z(:)' * X(:) / (2*n); % initial complementarity
 if verbose
     disp('iter alphap alphad gap lower upper');
 end
 prev_gap = inf;
-%while abs(phi-psi) > max([1,abs(phi)]) * 10^(-digits)
-%while 
+min_alpha = 1e-20;
 converge = true;
 for iter = 1:max_iter
-    cur_gap = abs(phi - psi);
-    if cur_gap < 1.49*10^(-digits) || abs(cur_gap - prev_gap) < prev_gap * 1e-3
+    cur_gap = phi - psi;
+    %if cur_gap < 1.49*10^(-digits) || abs(cur_gap - prev_gap) < prev_gap * 1e-3
+    if cur_gap < max([1,abs(phi)]) * 10^(-digits) || abs(cur_gap - prev_gap) < prev_gap * 1e-4
         break
     end
     prev_gap = cur_gap;
-    if rcond(Z) < 1e-15
-        Zi = pinv(Z);
-    else
-        Zi = inv(Z); % inv(Z) is needed explicitly
-    end
-    Zi = (Zi + Zi.')/2;
-    DY = (Zi .* X);
-    if rcond(DY) < 1e-15
-        dy = pinv(DY) * (mu * diag(Zi) - b);
-    else
-        dy = DY \ (mu * diag(Zi) - b); % solve for dy
-    end
+    Zi = inv(Z); % inv(Z) is needed explicitly, Z is psd
+    Zi = (Zi + Zi')/2;
+    dy = (Zi .* X) \ (mu * diag(Zi) - b); % solve for dy, the Hadamard product of two positive definite matrices is also a positive definite matrix
     dX = -Zi * diag(dy) * X + mu * Zi - X; % back substitute for dX
-    dX = (dX + dX.')/2; % symmetrize
+    dX = (dX + dX')/2; % symmetrize
     % line search on primal
     alphap = 1; % initial steplength
     [~, posdef] = chol( X + alphap * dX ); % test if pos.def
     while posdef > 0
         alphap = alphap * .8;
-        if alphap < 1e-10
+        if alphap < min_alpha
             break
         end
         [~, posdef] = chol( X + alphap * dX );
@@ -67,7 +58,7 @@ for iter = 1:max_iter
     [~, posdef] = chol(Z + alphad * diag(dy));
     while posdef > 0
         alphad = alphad * .8;
-        if alphad < 1e-10
+        if alphad < min_alpha
             break;
         end
         [~, posdef] = chol(Z + alphad * diag(dy));
@@ -83,12 +74,12 @@ for iter = 1:max_iter
     X = X + alphap * dX;
     y = y + alphad * dy;
     Z = Z + alphad * diag(dy);
-    mu = X(:).' * Z(:) / (2*n);
+    mu = X(:)' * Z(:) / (2*n);
     if alphap + alphad > 1.8
         mu = mu/2; 
     end % speed up for long steps
-    phi = b.' * y; 
-    psi = L(:).' * X(:);
+    phi = b' * y; 
+    psi = L(:)' * X(:);
     % display current iteration
     %disp([ iter alphap alphad (phi-psi) psi phi ]);
     if verbose

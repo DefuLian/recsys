@@ -13,7 +13,7 @@ while(true)
         data = data(:,col_ind);
     end
     row_sum = sum(data~=0,2);
-    row_ind = row_sum>=count;
+    row_ind = row_sum>=20;
     if nnz(row_ind)>0
         rows = rows(row_ind);
         data = data(row_ind,:);
