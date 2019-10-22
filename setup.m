@@ -55,3 +55,8 @@ if ~exist('piccf_sub')
     fprintf('compiling piccf_sub\n');
     mex -largeArrayDims alg/real/piccf/piccf_sub.cpp -output alg/real/piccf/piccf_sub
 end
+
+if ~exist('apq_search')
+    fprintf('compiling apq_search\n');
+    mex -largeArrayDims utils/eval/apq_search.cpp -output utils/eval/apq_search
+end

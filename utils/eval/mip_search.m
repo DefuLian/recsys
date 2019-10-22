@@ -72,6 +72,12 @@ elseif isfield(A, 'real') && isfield(A, 'code') % hamming distance ranking
     X = compactbit(A.code > 0); Y = compactbit(B.code > 0);
     M = size(X,1);
     result = topk_lookup(X, Y, train_t, k, false);
+elseif isfield(A, 'real') && isfield(A, 'query')
+    P = A.real; user = A.query;
+    Q = B.real; code = uint32(B.code); center = B.word;
+    M = size(P,1);
+    code = code - min(code) + 1;
+    result = apq_search(user, code, center, train_t, k);
 else
     error('unsupported type of inputs');
 end
